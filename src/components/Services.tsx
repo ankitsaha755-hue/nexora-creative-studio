@@ -23,6 +23,7 @@ const Services = () => {
         alt=""
         loading="lazy"
         className="absolute -left-32 top-20 w-[500px] opacity-30 animate-float-slow pointer-events-none"
+      />
       <img
         src={aiChip}
         alt=""
@@ -57,18 +58,7 @@ const Services = () => {
             </div>
           ))}
         </div>
-
-        <div className="mt-4 flex justify-end">
-          <div className="relative w-[380px]">
-            <img
-              src={aiChip}
-              alt=""
-              loading="lazy"
-              className="w-full opacity-90 animate-float pointer-events-none"
-            />
-            <div className="absolute inset-0 bg-black/30 rounded-3xl pointer-events-none" />
-          </div>
-        </div>
+      </div>
       </div>
     </section>
   );
