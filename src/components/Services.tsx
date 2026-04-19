@@ -23,6 +23,11 @@ const Services = () => {
         alt=""
         loading="lazy"
         className="absolute -left-32 top-20 w-[500px] opacity-30 animate-float-slow pointer-events-none"
+      <img
+        src={aiChip}
+        alt=""
+        loading="lazy"
+        className="absolute -right-20 bottom-10 w-[380px] opacity-25 animate-float pointer-events-none"
       />
 
       <div className="container relative z-10">
