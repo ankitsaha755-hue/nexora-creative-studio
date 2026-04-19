@@ -27,31 +27,38 @@ const Portfolio = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {projects.map((p, i) => (
-            <div
-              key={p.title}
-              className="group relative h-80 rounded-3xl overflow-hidden glass hover-lift cursor-pointer"
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${p.color} opacity-60 group-hover:opacity-100 transition-opacity duration-500`} />
-              <div className="absolute inset-0 grid-pattern opacity-20" />
+          {projects.map((p, i) => {
+            const inner = (
+              <div className="group relative h-80 rounded-3xl overflow-hidden glass hover-lift cursor-pointer">
+                <div className={`absolute inset-0 bg-gradient-to-br ${p.color} opacity-60 group-hover:opacity-100 transition-opacity duration-500`} />
+                <div className="absolute inset-0 grid-pattern opacity-20" />
 
-              <div className="absolute inset-0 p-8 flex flex-col justify-between z-10">
-                <div className="flex items-center justify-between">
-                  <span className="px-4 py-1.5 rounded-full glass text-xs font-bold uppercase tracking-widest text-primary">
-                    {p.tag}
-                  </span>
-                  <span className="font-display text-5xl font-black text-foreground/10 group-hover:text-foreground/30 transition-colors">
-                    0{i + 1}
-                  </span>
-                </div>
+                <div className="absolute inset-0 p-8 flex flex-col justify-between z-10">
+                  <div className="flex items-center justify-between">
+                    <span className="px-4 py-1.5 rounded-full glass text-xs font-bold uppercase tracking-widest text-primary">
+                      {p.tag}
+                    </span>
+                    <span className="font-display text-5xl font-black text-foreground/10 group-hover:text-foreground/30 transition-colors">
+                      0{i + 1}
+                    </span>
+                  </div>
 
-                <div className="transform group-hover:-translate-y-2 transition-transform duration-500">
-                  <h3 className="font-display text-3xl font-bold mb-2">{p.title}</h3>
-                  <p className="text-foreground/80">{p.desc}</p>
+                  <div className="transform group-hover:-translate-y-2 transition-transform duration-500">
+                    <h3 className="font-display text-3xl font-bold mb-2">{p.title}</h3>
+                    <p className="text-foreground/80">{p.desc}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+
+            return "href" in p && p.href ? (
+              <Link key={p.title} to={p.href} className="block">
+                {inner}
+              </Link>
+            ) : (
+              <div key={p.title}>{inner}</div>
+            );
+          })}
         </div>
       </div>
     </section>
