@@ -1,4 +1,4 @@
-import { Code2, Smartphone, Presentation, Target, Database, BarChart3, Layers, Palette, Bot } from "lucide-react";
+import { Code2, Smartphone, Presentation, Target, Database, Layers, Palette, Bot } from "lucide-react";
 import aiBrain from "@/assets/ai-brain.png";
 import aiChip from "@/assets/ai-chip.png";
 
@@ -9,8 +9,7 @@ const services = [
   { icon: Presentation, title: "PowerPoint Design", desc: "Investor-grade decks and presentations that close deals." },
   { icon: Target, title: "Branding/Lead Generation", desc: "Targeted campaigns that fill your pipeline with quality leads." },
   { icon: Palette, title: "Logo Generation", desc: "Distinctive, memorable logos that define your brand identity." },
-  { icon: Database, title: "Data Management", desc: "Clean, structured, and secure data systems built to scale." },
-  { icon: BarChart3, title: "Data Analytics", desc: "Turn raw data into clear insights and smart business decisions." },
+  { icon: Database, title: "Data Management and Analytics", desc: "Clean, structured data systems paired with insights that drive smart business decisions." },
   { icon: Bot, title: "Automation", desc: "Streamline workflows with intelligent automation that saves time and scales effortlessly." },
 ];
 
