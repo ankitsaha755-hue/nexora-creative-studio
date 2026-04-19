@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Menu, X, Lock } from "lucide-react";
 
 const links = [
   { href: "#home", label: "Home" },
