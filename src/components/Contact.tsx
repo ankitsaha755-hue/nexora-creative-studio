@@ -92,9 +92,35 @@ const Contact = () => {
             <div className="glass rounded-2xl p-6">
               <div className="text-xs uppercase tracking-widest text-muted-foreground mb-4">Follow</div>
               <div className="flex gap-3">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="WhatsApp"
+                      className="w-11 h-11 rounded-full glass flex items-center justify-center hover:bg-gradient-primary hover:scale-110 transition-all duration-300"
+                    >
+                      <WhatsApp className="w-4 h-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-2" align="start">
+                    <div className="text-xs uppercase tracking-widest text-muted-foreground px-2 py-1.5">
+                      Choose a number
+                    </div>
+                    {WA_NUMBERS.map((n) => (
+                      <a
+                        key={n.number}
+                        href={`https://wa.me/${n.number}?text=${encodeURIComponent(WA_MESSAGE)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <WhatsApp className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium">{n.label}</span>
+                      </a>
+                    ))}
+                  </PopoverContent>
+                </Popover>
                 {[
-                  { Icon: WhatsApp, href: "https://wa.me/919330252564?text=Hi%20Nexora%20Digital%2C%20I%27d%20like%20to%20chat.", label: "WhatsApp +91 93302 52564" },
-                  { Icon: WhatsApp, href: "https://wa.me/919674126372?text=Hi%20Nexora%20Digital%2C%20I%27d%20like%20to%20chat.", label: "WhatsApp +91 96741 26372" },
                   { Icon: Facebook, href: "https://www.facebook.com/share/14aphi7LT2j/", label: "Facebook" },
                   { Icon: Instagram, href: "https://www.instagram.com/nexorra.digital/?hl=en", label: "Instagram" },
                 ].map(({ Icon, href, label }) => (
