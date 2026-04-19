@@ -35,7 +35,7 @@ export const Route = createRootRoute({
           "Nexora Digital crafts premium websites, intelligent apps, investor-grade decks, and data systems that turn ambitious ideas into measurable results.",
       },
       { name: "author", content: "Nexora Digital" },
-      { property: "og:title", content: "Nexora Digital — Premium Digital Studio" },
+      { property: "og:title", content: "Nexora Digital — Premium Websites, Apps & Data Services" },
       {
         property: "og:description",
         content:
@@ -44,6 +44,12 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@NexoraDigital" },
+      { name: "twitter:title", content: "Nexora Digital — Premium Websites, Apps & Data Services" },
+      { name: "description", content: "Deploy websites from zip files using TanStack Start, enabling SSR and Cloudflare Workers deployment." },
+      { property: "og:description", content: "Deploy websites from zip files using TanStack Start, enabling SSR and Cloudflare Workers deployment." },
+      { name: "twitter:description", content: "Deploy websites from zip files using TanStack Start, enabling SSR and Cloudflare Workers deployment." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/91sD5HA2JGcjLlmQAX8LAdRemNA2/social-images/social-1776614599768-WhatsApp_Image_2026-04-19_at_1.33.47_PM.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/91sD5HA2JGcjLlmQAX8LAdRemNA2/social-images/social-1776614599768-WhatsApp_Image_2026-04-19_at_1.33.47_PM.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
