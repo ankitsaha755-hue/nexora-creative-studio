@@ -24,12 +24,6 @@ const Services = () => {
         loading="lazy"
         className="absolute -left-32 top-20 w-[500px] opacity-30 animate-float-slow pointer-events-none"
       />
-      <img
-        src={aiChip}
-        alt=""
-        loading="lazy"
-        className="absolute -right-20 -bottom-32 w-[380px] opacity-25 animate-float pointer-events-none"
-      />
 
       <div className="container relative z-10">
         <div className="text-center mb-20 max-w-2xl mx-auto">
@@ -57,6 +51,15 @@ const Services = () => {
               <p className="text-muted-foreground leading-relaxed">{s.desc}</p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-16 flex justify-center">
+          <img
+            src={aiChip}
+            alt=""
+            loading="lazy"
+            className="w-[380px] opacity-90 animate-float pointer-events-none"
+          />
         </div>
       </div>
     </section>
