@@ -1,8 +1,9 @@
+import { Link } from "@tanstack/react-router";
 import aiSphere from "@/assets/ai-sphere.png";
 import aiRobot from "@/assets/ai-robot.png";
 
 const projects = [
-  { tag: "Web", title: "FinPulse Dashboard", desc: "Realtime fintech analytics platform with AI insights.", color: "from-cyan-500/30 to-blue-600/30" },
+  { tag: "Web", title: "Cosmic Voyage", desc: "Interactive 3D solar system & galaxy explorer.", color: "from-cyan-500/30 to-blue-600/30", href: "/galaxy" },
   { tag: "App", title: "Lumen Health", desc: "Mobile wellness companion serving 50k+ daily users.", color: "from-purple-500/30 to-pink-600/30" },
   { tag: "Deck", title: "Aurora Pitch", desc: "Series-A deck that helped raise $4.2M in funding.", color: "from-fuchsia-500/30 to-rose-600/30" },
   { tag: "Data", title: "Retail Insights Engine", desc: "Pipeline processing 12M records daily.", color: "from-cyan-400/30 to-violet-600/30" },
