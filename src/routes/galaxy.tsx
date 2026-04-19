@@ -1,202 +1,430 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Stars, OrbitControls, Sphere } from "@react-three/drei";
-import { Suspense, useRef } from "react";
+import { Stars, OrbitControls } from "@react-three/drei";
+import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 export const Route = createFileRoute("/galaxy")({
   head: () => ({
     meta: [
-      { title: "Cosmic Voyage — 3D Solar System & Galaxy Explorer" },
-      { name: "description", content: "Explore an interactive 3D solar system and galaxy. Drift through stars, orbit planets, and discover the cosmos." },
-      { property: "og:title", content: "Cosmic Voyage — 3D Solar System & Galaxy Explorer" },
-      { property: "og:description", content: "Explore an interactive 3D solar system and galaxy with cool animations." },
+      { title: "Cosmic Voyage — A 3D Tour of the Solar System" },
+      { name: "description", content: "Take a cinematic 3D tour of the Solar System. Explore each planet with interactive models, facts, and a stunning galactic backdrop." },
+      { property: "og:title", content: "Cosmic Voyage — A 3D Tour of the Solar System" },
+      { property: "og:description", content: "Take a cinematic 3D tour of the Solar System with interactive planets and stars." },
     ],
   }),
   component: GalaxyPage,
 });
 
-type PlanetProps = {
-  distance: number;
-  size: number;
+// ---------- 3D Planet ----------
+type PlanetMeshProps = {
   color: string;
-  speed: number;
   emissive?: string;
+  emissiveIntensity?: number;
+  hasRing?: boolean;
+  ringColor?: string;
 };
 
-function Planet({ distance, size, color, speed, emissive }: PlanetProps) {
-  const ref = useRef<THREE.Mesh>(null);
-  const orbitRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (orbitRef.current) {
-      orbitRef.current.rotation.y = state.clock.getElapsedTime() * speed;
-    }
-    if (ref.current) {
-      ref.current.rotation.y += 0.01;
-    }
-  });
-
-  return (
-    <group ref={orbitRef}>
-      <mesh ref={ref} position={[distance, 0, 0]}>
-        <sphereGeometry args={[size, 32, 32]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={emissive ?? color}
-          emissiveIntensity={0.25}
-          roughness={0.6}
-        />
-      </mesh>
-      {/* orbit ring */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[distance - 0.01, distance + 0.01, 128]} />
-        <meshBasicMaterial color="#ffffff" opacity={0.08} transparent side={THREE.DoubleSide} />
-      </mesh>
-    </group>
-  );
-}
-
-function Sun() {
+function PlanetMesh({ color, emissive, emissiveIntensity = 0.15, hasRing, ringColor = "#d4c8a0" }: PlanetMeshProps) {
   const ref = useRef<THREE.Mesh>(null);
   useFrame(() => {
-    if (ref.current) ref.current.rotation.y += 0.002;
+    if (ref.current) ref.current.rotation.y += 0.004;
   });
   return (
     <>
-      <Sphere ref={ref} args={[1.2, 64, 64]}>
+      <ambientLight intensity={0.35} />
+      <directionalLight position={[5, 3, 5]} intensity={1.6} color="#fff6e0" />
+      <pointLight position={[-5, -2, -5]} intensity={0.4} color="#88aaff" />
+      <Stars radius={80} depth={40} count={2500} factor={3} saturation={0} fade speed={0.6} />
+      <mesh ref={ref}>
+        <sphereGeometry args={[1.6, 96, 96]} />
         <meshStandardMaterial
-          color="#ffb347"
-          emissive="#ff7a18"
-          emissiveIntensity={1.5}
+          color={color}
+          emissive={emissive ?? "#000000"}
+          emissiveIntensity={emissiveIntensity}
+          roughness={0.55}
+          metalness={0.15}
         />
-      </Sphere>
-      <pointLight position={[0, 0, 0]} intensity={3} color="#ffd27a" distance={50} />
+      </mesh>
+      {hasRing && (
+        <mesh rotation={[Math.PI / 2.4, 0, 0]}>
+          <ringGeometry args={[2.0, 3.0, 128]} />
+          <meshBasicMaterial color={ringColor} side={THREE.DoubleSide} transparent opacity={0.55} />
+        </mesh>
+      )}
+      <OrbitControls enablePan={false} enableZoom={false} autoRotate autoRotateSpeed={0.6} />
     </>
   );
 }
 
-function Scene() {
+// ---------- Hero starfield (background only, no planets) ----------
+function HeroStars() {
   return (
     <>
-      <ambientLight intensity={0.15} />
-      <Stars radius={120} depth={60} count={6000} factor={4} saturation={0} fade speed={1} />
-      <Sun />
-      <Planet distance={2.5} size={0.18} color="#a9a9a9" speed={0.9} />
-      <Planet distance={3.6} size={0.28} color="#e8b07a" speed={0.65} />
-      <Planet distance={5} size={0.32} color="#3aa1ff" emissive="#1e90ff" speed={0.5} />
-      <Planet distance={6.5} size={0.25} color="#c1440e" speed={0.4} />
-      <Planet distance={8.5} size={0.7} color="#d4a373" speed={0.25} />
-      <Planet distance={10.5} size={0.55} color="#e6d4a4" speed={0.18} />
-      <OrbitControls enablePan={false} enableZoom autoRotate autoRotateSpeed={0.3} minDistance={6} maxDistance={30} />
+      <ambientLight intensity={0.2} />
+      <Stars radius={120} depth={60} count={5000} factor={4} saturation={0} fade speed={1} />
     </>
   );
 }
 
-function GalaxyPage() {
+// ---------- Reveal-on-scroll wrapper ----------
+function Reveal({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) setVisible(true);
+        });
+      },
+      { threshold: 0.25 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   return (
-    <div className="relative min-h-screen bg-black text-white overflow-hidden font-sans">
-      {/* Fixed 3D background */}
-      <div className="fixed inset-0 z-0">
-        <Canvas camera={{ position: [0, 6, 16], fov: 55 }} dpr={[1, 2]}>
+    <div
+      ref={ref}
+      className={`transition-all duration-[1400ms] ease-out ${
+        visible ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-90 translate-y-12"
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ---------- Planet data ----------
+type PlanetInfo = {
+  name: string;
+  tagline: string;
+  description: string;
+  facts: { label: string; value: string }[];
+  color: string;
+  emissive?: string;
+  emissiveIntensity?: number;
+  hasRing?: boolean;
+  ringColor?: string;
+};
+
+const PLANETS: PlanetInfo[] = [
+  {
+    name: "Mercury",
+    tagline: "The Swift Messenger",
+    description:
+      "Closest to the Sun and the smallest planet in our system, Mercury is a scorched, cratered world with almost no atmosphere. A single day on Mercury lasts longer than its year, and its surface swings between blistering heat and freezing cold.",
+    facts: [
+      { label: "Diameter", value: "4,879 km" },
+      { label: "Distance from Sun", value: "57.9 million km" },
+      { label: "Year length", value: "88 Earth days" },
+      { label: "Moons", value: "0" },
+    ],
+    color: "#9a8f86",
+    emissive: "#3a302a",
+  },
+  {
+    name: "Venus",
+    tagline: "The Veiled Twin",
+    description:
+      "Wrapped in thick clouds of sulfuric acid, Venus is the hottest planet in the Solar System. Its dense atmosphere traps heat in a runaway greenhouse effect, making its surface hot enough to melt lead.",
+    facts: [
+      { label: "Diameter", value: "12,104 km" },
+      { label: "Surface temp", value: "465°C" },
+      { label: "Year length", value: "225 Earth days" },
+      { label: "Moons", value: "0" },
+    ],
+    color: "#e8b07a",
+    emissive: "#5a3a1a",
+  },
+  {
+    name: "Earth",
+    tagline: "The Pale Blue Dot",
+    description:
+      "Our home — the only known world to harbour life. A delicate balance of water, atmosphere, and magnetic protection makes Earth a thriving sanctuary in the cold vastness of space.",
+    facts: [
+      { label: "Diameter", value: "12,742 km" },
+      { label: "Distance from Sun", value: "149.6 million km" },
+      { label: "Year length", value: "365.25 days" },
+      { label: "Moons", value: "1" },
+    ],
+    color: "#3aa1ff",
+    emissive: "#0a3a7a",
+    emissiveIntensity: 0.25,
+  },
+  {
+    name: "Mars",
+    tagline: "The Red Frontier",
+    description:
+      "A cold desert world with rust-coloured plains, towering volcanoes, and the deepest canyons in the Solar System. Mars holds clues to our past — and may hold the future of human exploration beyond Earth.",
+    facts: [
+      { label: "Diameter", value: "6,779 km" },
+      { label: "Surface temp", value: "−63°C avg" },
+      { label: "Year length", value: "687 Earth days" },
+      { label: "Moons", value: "2 (Phobos, Deimos)" },
+    ],
+    color: "#c1440e",
+    emissive: "#3a1004",
+  },
+  {
+    name: "Jupiter",
+    tagline: "The King of Planets",
+    description:
+      "A colossal ball of gas more than twice as massive as all other planets combined. Jupiter's swirling storms — including the centuries-old Great Red Spot — could swallow Earth whole.",
+    facts: [
+      { label: "Diameter", value: "139,820 km" },
+      { label: "Year length", value: "11.9 Earth years" },
+      { label: "Moons", value: "95+" },
+      { label: "Famous storm", value: "Great Red Spot" },
+    ],
+    color: "#d4a373",
+    emissive: "#3a2a14",
+  },
+  {
+    name: "Saturn",
+    tagline: "The Jewel of the System",
+    description:
+      "Famous for its breathtaking ring system — billions of icy fragments stretching wider than the Earth-Moon distance, yet only meters thick. A gas giant of pale gold and astonishing beauty.",
+    facts: [
+      { label: "Diameter", value: "116,460 km" },
+      { label: "Year length", value: "29.5 Earth years" },
+      { label: "Moons", value: "146+" },
+      { label: "Ring width", value: "~282,000 km" },
+    ],
+    color: "#e6d4a4",
+    emissive: "#3a2e10",
+    hasRing: true,
+    ringColor: "#e8d8a8",
+  },
+  {
+    name: "Uranus",
+    tagline: "The Sideways Giant",
+    description:
+      "An ice giant tipped on its side, rolling around the Sun like a barrel. Its pale cyan glow comes from methane in the upper atmosphere, which absorbs red light and reflects blue.",
+    facts: [
+      { label: "Diameter", value: "50,724 km" },
+      { label: "Year length", value: "84 Earth years" },
+      { label: "Moons", value: "27" },
+      { label: "Tilt", value: "97.8°" },
+    ],
+    color: "#9fdcdc",
+    emissive: "#0e3a3a",
+    emissiveIntensity: 0.25,
+  },
+  {
+    name: "Neptune",
+    tagline: "The Distant Storm",
+    description:
+      "The farthest planet from the Sun — a deep blue world of supersonic winds and swirling storms. Neptune was the first planet predicted by mathematics before it was ever observed.",
+    facts: [
+      { label: "Diameter", value: "49,244 km" },
+      { label: "Year length", value: "165 Earth years" },
+      { label: "Moons", value: "14 (incl. Triton)" },
+      { label: "Wind speed", value: "up to 2,100 km/h" },
+    ],
+    color: "#3b6cf2",
+    emissive: "#0a1a5a",
+    emissiveIntensity: 0.3,
+  },
+];
+
+// ---------- Page ----------
+function GalaxyPage() {
+  const tourRef = useRef<HTMLDivElement>(null);
+  const [outroVisible, setOutroVisible] = useState(false);
+  const outroRef = useRef<HTMLDivElement>(null);
+  const outroVideoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const el = outroRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            setOutroVisible(true);
+            outroVideoRef.current?.play().catch(() => {});
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const scrollToTour = () => {
+    tourRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  return (
+    <div className="relative min-h-screen bg-black text-white overflow-x-hidden font-sans">
+      {/* Subtle starfield behind everything */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <Canvas camera={{ position: [0, 0, 10], fov: 60 }} dpr={[1, 2]}>
           <Suspense fallback={null}>
-            <Scene />
+            <HeroStars />
           </Suspense>
         </Canvas>
       </div>
 
-      {/* Subtle vignette */}
-      <div className="pointer-events-none fixed inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.85)_100%)]" />
+      {/* Top nav */}
+      <nav className="relative z-30 flex items-center justify-between px-6 md:px-16 py-6">
+        <Link to="/" className="text-xs md:text-sm tracking-[0.3em] uppercase text-white/70 hover:text-white transition">
+          ← Back
+        </Link>
+        <span className="text-xs md:text-sm tracking-[0.3em] uppercase text-white/50">Cosmic Voyage</span>
+      </nav>
 
-      {/* Content */}
-      <div className="relative z-20">
-        {/* Nav */}
-        <nav className="flex items-center justify-between px-6 md:px-12 py-6">
-          <Link to="/" className="text-sm tracking-[0.3em] uppercase text-white/80 hover:text-white transition">
-            ← Back
-          </Link>
-          <span className="text-sm tracking-[0.3em] uppercase text-white/60">Cosmic Voyage</span>
-        </nav>
+      {/* ===== HERO: Video left | Text right (no overlap) ===== */}
+      <section className="relative z-20 min-h-[calc(100vh-80px)] w-full px-6 md:px-12 lg:px-20 pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center min-h-[calc(100vh-160px)]">
+          {/* Video panel */}
+          <div className="lg:col-span-7 relative">
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.9)] bg-black">
+              <video
+                src="/solar-hero.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              {/* Edge fade so video blends into black bg */}
+              <div className="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_120px_40px_rgba(0,0,0,0.95)]" />
+            </div>
+          </div>
 
-        {/* Hero */}
-        <section className="min-h-[90vh] flex flex-col items-center justify-center text-center px-6">
-          <p className="text-xs md:text-sm tracking-[0.5em] uppercase text-cyan-300/90 mb-6 [text-shadow:0_0_12px_rgba(34,211,238,0.6)]">
-            An interactive journey
-          </p>
-          <h1 className="font-serif text-5xl md:text-8xl font-light tracking-tight mb-8 text-white">
-            The Solar System
-            <span className="block mt-3 text-fuchsia-300 [text-shadow:0_0_18px_rgba(232,121,249,0.7)] italic font-normal">
-              & Beyond
-            </span>
-          </h1>
-          <p className="max-w-2xl text-base md:text-lg leading-relaxed text-white/75">
-            Drift through orbits, watch worlds turn, and lose yourself in a sea of stars.
-            Drag to rotate. Scroll to zoom.
-          </p>
-          <div className="mt-12 animate-bounce text-white/50 text-xs tracking-[0.3em] uppercase">Scroll ↓</div>
-        </section>
-
-        {/* Content sections */}
-        <main className="max-w-3xl mx-auto px-6 pb-32 space-y-24">
-          <article>
-            <h2 className="font-serif text-3xl md:text-5xl font-light mb-6 text-cyan-200 [text-shadow:0_0_14px_rgba(103,232,249,0.4)]">
-              Our Solar Neighborhood
-            </h2>
-            <p className="text-white/80 leading-relaxed text-lg">
-              Anchored by the Sun — a middle-aged G-type star burning hydrogen into helium for nearly 4.6 billion years —
-              our solar system is a delicate choreography of eight planets, dozens of moons, and countless minor bodies.
-              From scorched, airless Mercury to the icy plains of distant Neptune, each world tells a different chapter
-              of a story that began in a collapsing cloud of gas and dust.
+          {/* Text panel */}
+          <div className="lg:col-span-5 text-left">
+            <p className="text-[10px] md:text-xs tracking-[0.5em] uppercase text-cyan-300/90 mb-5">
+              An interactive journey
             </p>
-          </article>
-
-          <article>
-            <h2 className="font-serif text-3xl md:text-5xl font-light mb-6 text-fuchsia-200 [text-shadow:0_0_14px_rgba(240,171,252,0.4)]">
-              Worlds in Motion
-            </h2>
-            <p className="text-white/80 leading-relaxed text-lg">
-              Every planet you see drifting above moves under the same invisible law: gravity. Earth races around the Sun
-              at roughly 30 kilometres per second, while Jupiter — the giant — takes nearly twelve Earth years to complete
-              a single orbit. Saturn's rings, made of billions of icy fragments, are so wide they could span the distance
-              from Earth to the Moon, yet so thin you could see straight through them edge-on.
+            <h1 className="font-serif text-4xl md:text-6xl xl:text-7xl font-light leading-[1.05] tracking-tight mb-6">
+              The <span className="italic text-white/90">Solar</span>
+              <br />
+              System
+              <span className="block mt-2 text-fuchsia-300/90 italic font-normal">& Beyond</span>
+            </h1>
+            <p className="text-base md:text-lg text-white/70 leading-relaxed max-w-xl mb-10">
+              A cinematic voyage through the worlds that orbit our Sun. Eight planets,
+              countless moons, billions of stars — and one fragile blue world we call home.
             </p>
-          </article>
+            <button
+              onClick={scrollToTour}
+              className="group inline-flex items-center gap-3 px-8 py-4 rounded-full bg-white text-black font-medium tracking-[0.2em] uppercase text-xs md:text-sm hover:bg-fuchsia-200 transition-all duration-500 shadow-[0_0_40px_rgba(232,121,249,0.25)]"
+            >
+              Take a Tour
+              <span className="inline-block transition-transform group-hover:translate-y-1">↓</span>
+            </button>
+          </div>
+        </div>
+      </section>
 
-          <article>
-            <h2 className="font-serif text-3xl md:text-5xl font-light mb-6 text-white">
-              The Milky Way
+      {/* Divider into the tour */}
+      <div ref={tourRef} className="relative z-20 h-32" />
+
+      {/* ===== TOUR: One planet per section ===== */}
+      <main className="relative z-20">
+        {PLANETS.map((planet, i) => (
+          <section
+            key={planet.name}
+            className="min-h-screen w-full px-6 md:px-12 lg:px-20 py-24 flex items-center"
+          >
+            <div className={`w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center ${
+              i % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
+            }`}>
+              {/* 3D Planet */}
+              <Reveal>
+                <div className="w-full aspect-square max-w-[520px] mx-auto">
+                  <Canvas camera={{ position: [0, 0, 5], fov: 45 }} dpr={[1, 2]}>
+                    <Suspense fallback={null}>
+                      <PlanetMesh
+                        color={planet.color}
+                        emissive={planet.emissive}
+                        emissiveIntensity={planet.emissiveIntensity}
+                        hasRing={planet.hasRing}
+                        ringColor={planet.ringColor}
+                      />
+                    </Suspense>
+                  </Canvas>
+                </div>
+              </Reveal>
+
+              {/* Text */}
+              <Reveal>
+                <div className="text-left">
+                  <p className="text-[10px] md:text-xs tracking-[0.5em] uppercase text-white/40 mb-4">
+                    Planet 0{i + 1} / 08
+                  </p>
+                  <h2 className="font-serif text-5xl md:text-7xl font-light tracking-tight mb-3">
+                    {planet.name}
+                  </h2>
+                  <p className="text-cyan-300/80 italic text-lg md:text-xl mb-8">{planet.tagline}</p>
+                  <p className="text-white/75 text-base md:text-lg leading-relaxed mb-10 max-w-xl">
+                    {planet.description}
+                  </p>
+                  <dl className="grid grid-cols-2 gap-x-8 gap-y-5 max-w-lg">
+                    {planet.facts.map((f) => (
+                      <div key={f.label} className="border-l border-white/15 pl-4">
+                        <dt className="text-[10px] tracking-[0.3em] uppercase text-white/40 mb-1">
+                          {f.label}
+                        </dt>
+                        <dd className="text-white/90 text-sm md:text-base">{f.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              </Reveal>
+            </div>
+          </section>
+        ))}
+
+        {/* ===== OUTRO: Sun video with fade in ===== */}
+        <section
+          ref={outroRef}
+          className="relative min-h-screen w-full flex flex-col items-center justify-center px-6 py-24"
+        >
+          <div
+            className={`relative w-full max-w-4xl aspect-video rounded-3xl overflow-hidden bg-black transition-opacity duration-[2500ms] ease-out ${
+              outroVisible ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <video
+              ref={outroVideoRef}
+              src="/sun-outro.mp4"
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            <div className="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_140px_50px_rgba(0,0,0,0.95)]" />
+          </div>
+
+          <div
+            className={`mt-14 text-center transition-all duration-[2500ms] delay-500 ease-out ${
+              outroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+            }`}
+          >
+            <h2 className="font-serif text-3xl md:text-5xl font-light tracking-tight mb-4">
+              Thank you for taking the tour
             </h2>
-            <p className="text-white/80 leading-relaxed text-lg">
-              Zoom out far enough and our entire solar system becomes a single dim spark on one of the spiral arms of
-              the Milky Way — a barred galaxy of more than 100 billion stars stretching 100,000 light-years across.
-              It is one of perhaps two trillion galaxies in the observable universe. When you look up at the night sky,
-              the faint band of light arching overhead is the combined glow of stars from our own galactic disk,
-              seen edge-on from within.
+            <p className="text-white/70 text-lg md:text-xl italic">
+              … and staying with us.
             </p>
-          </article>
-
-          <article>
-            <h2 className="font-serif text-3xl md:text-5xl font-light mb-6 text-cyan-300 [text-shadow:0_0_14px_rgba(103,232,249,0.4)]">
-              A Universe of Wonder
-            </h2>
-            <p className="text-white/80 leading-relaxed text-lg">
-              Beyond the Milky Way lie galaxy clusters, supermassive black holes, nebulae birthing new stars, and the
-              faint afterglow of the Big Bang itself — the cosmic microwave background — still drifting through space
-              13.8 billion years later. Every atom in your body was forged in the heart of an ancient star. We are,
-              quite literally, the universe contemplating itself.
-            </p>
-          </article>
-
-          <div className="text-center pt-12">
             <Link
               to="/"
-              className="inline-block px-8 py-4 rounded-full border border-white/30 hover:border-white/80 hover:bg-white/5 transition tracking-[0.25em] uppercase text-sm"
+              className="inline-block mt-12 px-8 py-4 rounded-full border border-white/30 hover:border-white/80 hover:bg-white/5 transition tracking-[0.25em] uppercase text-xs"
             >
               Return to Earth
             </Link>
           </div>
-        </main>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
