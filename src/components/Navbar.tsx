@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, X, Lock } from "lucide-react";
+import nexoraLogo from "@/assets/nexora-logo.jpeg";
 
 const links = [
   { href: "#home", label: "Home" },
@@ -29,7 +30,11 @@ const Navbar = () => {
     >
       <nav className="container flex items-center justify-between">
         <a href="#home" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-lg bg-gradient-primary shadow-glow group-hover:scale-110 transition-transform" />
+          <img
+            src={nexoraLogo}
+            alt="Nexora Digital logo"
+            className="w-10 h-10 rounded-lg object-cover shadow-glow group-hover:scale-110 transition-transform"
+          />
           <span className="font-display text-lg font-bold tracking-wider">
             NEXORA<span className="text-gradient"> DIGITAL</span>
           </span>
