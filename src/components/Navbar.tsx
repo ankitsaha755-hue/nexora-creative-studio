@@ -84,6 +84,16 @@ const Navbar = () => {
                 </a>
               </li>
             ))}
+            <li>
+              <Link
+                to="/auth"
+                onClick={() => setOpen(false)}
+                className="inline-flex items-center gap-1.5 text-primary font-semibold"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Admin
+              </Link>
+            </li>
           </ul>
         </div>
       )}
