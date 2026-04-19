@@ -384,29 +384,13 @@ function GalaxyPage() {
           </section>
         ))}
 
-        {/* ===== OUTRO: Sun video with fade in ===== */}
+        {/* ===== OUTRO: Text first, then full-bleed sun video at the bottom ===== */}
         <section
           ref={outroRef}
-          className="relative min-h-screen w-full flex flex-col items-center justify-center py-24"
+          className="relative w-full flex flex-col items-center justify-end pt-24"
         >
           <div
-            className={`relative w-screen aspect-video overflow-hidden bg-black transition-opacity duration-[2500ms] ease-out ${
-              outroVisible ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <video
-              ref={outroVideoRef}
-              src="/sun-outro.mp4"
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            />
-            <div className="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_180px_70px_rgba(0,0,0,0.98)]" />
-          </div>
-
-          <div
-            className={`mt-14 text-center px-6 transition-all duration-[2500ms] delay-500 ease-out ${
+            className={`text-center px-6 mb-16 transition-all duration-[2500ms] delay-300 ease-out ${
               outroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
           >
@@ -422,6 +406,23 @@ function GalaxyPage() {
             >
               Return to Earth
             </Link>
+          </div>
+
+          <div
+            className={`relative w-screen overflow-hidden bg-black transition-opacity duration-[2500ms] ease-out ${
+              outroVisible ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <video
+              ref={outroVideoRef}
+              src="/sun-outro.mp4"
+              loop
+              muted
+              playsInline
+              className="block w-full h-auto object-cover"
+            />
+            {/* Top + side fade so it blends seamlessly into the page */}
+            <div className="pointer-events-none absolute inset-0 [box-shadow:inset_0_120px_140px_-40px_rgba(0,0,0,0.98),inset_0_0_180px_60px_rgba(0,0,0,0.9)]" />
           </div>
         </section>
       </main>
