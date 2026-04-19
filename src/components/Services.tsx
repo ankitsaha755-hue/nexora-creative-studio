@@ -1,4 +1,4 @@
-import { Code2, Smartphone, Presentation, Target, Database, BarChart3, Layers, Palette, Bot } from "lucide-react";
+import { Code2, Smartphone, Presentation, Target, Database, Layers, Palette, Bot } from "lucide-react";
 import aiBrain from "@/assets/ai-brain.png";
 import aiChip from "@/assets/ai-chip.png";
 
