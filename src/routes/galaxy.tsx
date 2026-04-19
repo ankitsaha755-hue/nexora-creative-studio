@@ -280,12 +280,12 @@ function GalaxyPage() {
         <span className="text-xs md:text-sm tracking-[0.3em] uppercase text-white/50">Cosmic Voyage</span>
       </nav>
 
-      {/* ===== HERO: Video left | Text right (no overlap) ===== */}
-      <section className="relative z-20 min-h-[calc(100vh-80px)] w-full px-6 md:px-12 lg:px-20 pb-16">
+      {/* ===== HERO: Full-width video left | Text right ===== */}
+      <section className="relative z-20 min-h-[calc(100vh-80px)] w-full pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center min-h-[calc(100vh-160px)]">
-          {/* Video panel */}
+          {/* Video panel — stretches to left edge */}
           <div className="lg:col-span-7 relative">
-            <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.9)] bg-black">
+            <div className="relative w-screen lg:w-full max-w-none aspect-video overflow-hidden bg-black">
               <video
                 src="/solar-hero.mp4"
                 autoPlay
@@ -295,12 +295,12 @@ function GalaxyPage() {
                 className="w-full h-full object-cover"
               />
               {/* Edge fade so video blends into black bg */}
-              <div className="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_120px_40px_rgba(0,0,0,0.95)]" />
+              <div className="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_140px_60px_rgba(0,0,0,0.98)]" />
             </div>
           </div>
 
           {/* Text panel */}
-          <div className="lg:col-span-5 text-left">
+          <div className="lg:col-span-5 text-left px-6 md:px-12 lg:pr-20">
             <p className="text-[10px] md:text-xs tracking-[0.5em] uppercase text-cyan-300/90 mb-5">
               An interactive journey
             </p>
@@ -387,10 +387,10 @@ function GalaxyPage() {
         {/* ===== OUTRO: Sun video with fade in ===== */}
         <section
           ref={outroRef}
-          className="relative min-h-screen w-full flex flex-col items-center justify-center px-6 py-24"
+          className="relative min-h-screen w-full flex flex-col items-center justify-center py-24"
         >
           <div
-            className={`relative w-full max-w-4xl aspect-video rounded-3xl overflow-hidden bg-black transition-opacity duration-[2500ms] ease-out ${
+            className={`relative w-screen aspect-video overflow-hidden bg-black transition-opacity duration-[2500ms] ease-out ${
               outroVisible ? "opacity-100" : "opacity-0"
             }`}
           >
@@ -402,11 +402,11 @@ function GalaxyPage() {
               playsInline
               className="w-full h-full object-cover"
             />
-            <div className="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_140px_50px_rgba(0,0,0,0.95)]" />
+            <div className="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_180px_70px_rgba(0,0,0,0.98)]" />
           </div>
 
           <div
-            className={`mt-14 text-center transition-all duration-[2500ms] delay-500 ease-out ${
+            className={`mt-14 text-center px-6 transition-all duration-[2500ms] delay-500 ease-out ${
               outroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
           >
