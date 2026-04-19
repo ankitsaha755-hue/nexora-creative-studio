@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Menu, X, Lock } from "lucide-react";
 
 const links = [
   { href: "#home", label: "Home" },
@@ -47,9 +48,18 @@ const Navbar = () => {
           ))}
         </ul>
 
-        <a href="#order" className="hidden md:inline-flex btn-hero !py-2.5 !px-6 text-sm">
-          Get Started
-        </a>
+        <div className="hidden md:flex items-center gap-3">
+          <Link
+            to="/auth"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            Admin
+          </Link>
+          <a href="#order" className="btn-hero !py-2.5 !px-6 text-sm">
+            Get Started
+          </a>
+        </div>
 
         <button
           onClick={() => setOpen(!open)}
@@ -74,6 +84,16 @@ const Navbar = () => {
                 </a>
               </li>
             ))}
+            <li>
+              <Link
+                to="/auth"
+                onClick={() => setOpen(false)}
+                className="inline-flex items-center gap-1.5 text-primary font-semibold"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Admin
+              </Link>
+            </li>
           </ul>
         </div>
       )}
