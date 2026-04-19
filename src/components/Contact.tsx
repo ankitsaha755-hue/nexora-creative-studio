@@ -2,6 +2,14 @@ import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+const WA_MESSAGE =
+  "Hello Nexora Digital Team! I am interested in gaining a detailed understanding about your services and would appreciate further details.";
+const WA_NUMBERS = [
+  { label: "+91 93302 52564", number: "919330252564" },
+  { label: "+91 96741 26372", number: "919674126372" },
+];
 
 const WhatsApp = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
