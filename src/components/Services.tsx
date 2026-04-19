@@ -28,7 +28,7 @@ const Services = () => {
         src={aiChip}
         alt=""
         loading="lazy"
-        className="absolute -right-20 bottom-10 w-[380px] opacity-25 animate-float pointer-events-none"
+        className="absolute -right-20 -bottom-32 w-[380px] opacity-25 animate-float pointer-events-none"
       />
 
       <div className="container relative z-10">
