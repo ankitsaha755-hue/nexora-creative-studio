@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, Mail, ShoppingBag, ShieldAlert } from "lucide-react";
+import { LogOut, Mail, ShoppingBag, ShieldAlert, FileText, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -30,7 +30,7 @@ function AdminPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [tab, setTab] = useState<"messages" | "orders">("messages");
+  const [tab, setTab] = useState<"messages" | "orders" | "invoice">("messages");
   const [messages, setMessages] = useState<ContactMsg[]>([]);
   const [orders, setOrders] = useState<OrderRow[]>([]);
 
@@ -140,6 +140,14 @@ function AdminPage() {
           >
             <ShoppingBag className="w-4 h-4" /> Orders ({orders.length})
           </button>
+          <button
+            onClick={() => setTab("invoice")}
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all ${
+              tab === "invoice" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "glass hover:bg-muted/50"
+            }`}
+          >
+            <FileText className="w-4 h-4" /> Invoice Generator
+          </button>
         </div>
 
         {tab === "messages" && (
@@ -161,6 +169,33 @@ function AdminPage() {
                 <p className="text-foreground/90 whitespace-pre-wrap">{m.message}</p>
               </div>
             ))}
+          </div>
+        )}
+
+        {tab === "invoice" && (
+          <div className="space-y-4">
+            <div className="glass rounded-2xl p-5 flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <h2 className="font-display text-lg font-semibold mb-1">Nexora Invoice Generator</h2>
+                <p className="text-sm text-muted-foreground">Fill in client &amp; service details, then download a polished PDF invoice.</p>
+              </div>
+              <a
+                href="/invoice-template.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-hero text-sm"
+              >
+                <ExternalLink className="w-4 h-4" /> Open in new tab
+              </a>
+            </div>
+            <div className="glass rounded-2xl overflow-hidden border border-border">
+              <iframe
+                src="/invoice-template.html"
+                title="Nexora Invoice Generator"
+                className="w-full bg-background"
+                style={{ height: "calc(100vh - 280px)", minHeight: "700px", border: "0" }}
+              />
+            </div>
           </div>
         )}
 
