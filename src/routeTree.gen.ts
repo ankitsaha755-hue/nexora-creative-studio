@@ -42,9 +42,9 @@ const RomeIndexRoute = RomeIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const RomeTourRoute = RomeTourRouteImport.update({
-  id: '/tour',
-  path: '/tour',
-  getParentRoute: () => RomeRoute,
+  id: '/rome/tour',
+  path: '/rome/tour',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -92,6 +92,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   GalaxyRoute: typeof GalaxyRoute
+  RomeTourRoute: typeof RomeTourRoute
   RomeIndexRoute: typeof RomeIndexRoute
 }
 
@@ -134,10 +135,10 @@ declare module '@tanstack/react-router' {
     }
     '/rome/tour': {
       id: '/rome/tour'
-      path: '/tour'
+      path: '/rome/tour'
       fullPath: '/rome/tour'
       preLoaderRoute: typeof RomeTourRouteImport
-      parentRoute: typeof RomeRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -147,6 +148,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   GalaxyRoute: GalaxyRoute,
+  RomeTourRoute: RomeTourRoute,
   RomeIndexRoute: RomeIndexRoute,
 }
 export const routeTree = rootRouteImport
