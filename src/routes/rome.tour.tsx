@@ -23,6 +23,8 @@ type Monument = {
   position: [number, number, number];
   story: string;
   color: string;
+  built: number;   // year built (negative = BC)
+  fell: number;    // year ruined / abandoned
 };
 
 const MONUMENTS: Monument[] = [
@@ -32,6 +34,8 @@ const MONUMENTS: Monument[] = [
     position: [8, 0, -4],
     story: "Inaugurated 80 AD by Emperor Titus. 50,000 spectators roared as gladiators fought beneath the Roman sun.",
     color: "#d6c2a4",
+    built: 80,
+    fell: 600,
   },
   {
     id: "forum",
@@ -39,6 +43,8 @@ const MONUMENTS: Monument[] = [
     position: [0, 0, 0],
     story: "The beating heart of the Republic. On this spot in 44 BC, Julius Caesar was assassinated at the foot of Pompey's statue.",
     color: "#e8d8b8",
+    built: -500,
+    fell: 500,
   },
   {
     id: "palatine",
@@ -46,6 +52,8 @@ const MONUMENTS: Monument[] = [
     position: [-8, 0, 2],
     story: "Where Romulus founded Rome in 753 BC. Later home to emperors — the word 'palace' comes from this hill.",
     color: "#c9b48a",
+    built: -500,
+    fell: 550,
   },
   {
     id: "pantheon",
@@ -53,6 +61,8 @@ const MONUMENTS: Monument[] = [
     position: [-4, 0, -7],
     story: "Rebuilt by Hadrian around 126 AD. Its concrete dome remains the world's largest unreinforced dome — 1,900 years on.",
     color: "#cfb98f",
+    built: 126,
+    fell: 600,
   },
   {
     id: "circus",
@@ -60,14 +70,44 @@ const MONUMENTS: Monument[] = [
     position: [5, 0, 6],
     story: "250,000 Romans packed in to bet on chariot races. The track stretched longer than five football fields.",
     color: "#b89a72",
+    built: -329,
+    fell: 549,
   },
 ];
 
+// Fade-in over 40 years from build, fade-out over 80 years after fall
+function eraOpacity(year: number, m: Monument): number {
+  if (year < m.built - 40) return 0;
+  if (year < m.built) return (year - (m.built - 40)) / 40;
+  if (year <= m.fell) return 1;
+  if (year <= m.fell + 80) return 1 - (year - m.fell) / 80;
+  return 0;
+}
+
 // ---------- 3D Buildings ----------
-function Colosseum({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+type BuildingProps = { position: [number, number, number]; color: string; opacity: number; onClick: () => void };
+
+function FadeGroup({ opacity, children, position, onClick }: { opacity: number; children: React.ReactNode; position: [number, number, number]; onClick: () => void }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame(() => {
+    if (!ref.current) return;
+    ref.current.visible = opacity > 0.01;
+    ref.current.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (mesh.isMesh && mesh.material) {
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        mat.transparent = true;
+        mat.opacity = opacity;
+        mat.depthWrite = opacity > 0.95;
+      }
+    });
+  });
+  return <group ref={ref} position={position} onClick={onClick}>{children}</group>;
+}
+
+function Colosseum({ position, color, opacity, onClick }: BuildingProps) {
   return (
-    <group position={position} onClick={onClick}>
-      {/* Outer wall — cylindrical with arches */}
+    <FadeGroup position={position} opacity={opacity} onClick={onClick}>
       <mesh position={[0, 1.6, 0]} castShadow>
         <cylinderGeometry args={[2.2, 2.4, 3.2, 32, 1, true]} />
         <meshStandardMaterial color={color} roughness={0.9} side={THREE.DoubleSide} />
@@ -80,13 +120,13 @@ function Colosseum({ position, color, onClick }: { position: [number, number, nu
         <cylinderGeometry args={[2.5, 2.5, 0.1, 32]} />
         <meshStandardMaterial color="#8a7556" roughness={1} />
       </mesh>
-    </group>
+    </FadeGroup>
   );
 }
 
-function Pantheon({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+function Pantheon({ position, color, opacity, onClick }: BuildingProps) {
   return (
-    <group position={position} onClick={onClick}>
+    <FadeGroup position={position} opacity={opacity} onClick={onClick}>
       <mesh position={[0, 1, 0]} castShadow>
         <cylinderGeometry args={[1.6, 1.6, 2, 32]} />
         <meshStandardMaterial color={color} roughness={0.85} />
@@ -95,26 +135,23 @@ function Pantheon({ position, color, onClick }: { position: [number, number, num
         <sphereGeometry args={[1.6, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshStandardMaterial color={color} roughness={0.8} />
       </mesh>
-      {/* Portico columns */}
       {[-1, -0.5, 0, 0.5, 1].map((x) => (
         <mesh key={x} position={[x, 1.2, 1.7]} castShadow>
           <cylinderGeometry args={[0.12, 0.12, 2.4, 12]} />
           <meshStandardMaterial color="#efe5cf" roughness={0.7} />
         </mesh>
       ))}
-    </group>
+    </FadeGroup>
   );
 }
 
-function Forum({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+function Forum({ position, color, opacity, onClick }: BuildingProps) {
   return (
-    <group position={position} onClick={onClick}>
-      {/* Temple base */}
+    <FadeGroup position={position} opacity={opacity} onClick={onClick}>
       <mesh position={[0, 0.2, 0]} castShadow>
         <boxGeometry args={[3, 0.4, 2]} />
         <meshStandardMaterial color="#a89270" roughness={0.95} />
       </mesh>
-      {/* Columns */}
       {[-1.2, -0.6, 0, 0.6, 1.2].map((x) =>
         [-0.7, 0.7].map((z) => (
           <mesh key={`${x}-${z}`} position={[x, 1.4, z]} castShadow>
@@ -123,23 +160,21 @@ function Forum({ position, color, onClick }: { position: [number, number, number
           </mesh>
         ))
       )}
-      {/* Roof */}
       <mesh position={[0, 2.7, 0]} castShadow>
         <boxGeometry args={[3.2, 0.3, 2.2]} />
         <meshStandardMaterial color="#b89a72" roughness={0.8} />
       </mesh>
-      {/* Pediment */}
-      <mesh position={[0, 3.05, 0]} rotation={[0, 0, 0]} castShadow>
+      <mesh position={[0, 3.05, 0]} castShadow>
         <coneGeometry args={[1.2, 0.5, 4]} />
         <meshStandardMaterial color="#b89a72" roughness={0.8} />
       </mesh>
-    </group>
+    </FadeGroup>
   );
 }
 
-function Palatine({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+function Palatine({ position, color, opacity, onClick }: BuildingProps) {
   return (
-    <group position={position} onClick={onClick}>
+    <FadeGroup position={position} opacity={opacity} onClick={onClick}>
       <mesh position={[0, 0.6, 0]} castShadow>
         <boxGeometry args={[3.5, 1.2, 2.5]} />
         <meshStandardMaterial color="#7d6444" roughness={1} />
@@ -152,13 +187,13 @@ function Palatine({ position, color, onClick }: { position: [number, number, num
         <boxGeometry args={[1, 0.8, 1.6]} />
         <meshStandardMaterial color={color} roughness={0.9} />
       </mesh>
-    </group>
+    </FadeGroup>
   );
 }
 
-function CircusMaximus({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+function CircusMaximus({ position, color, opacity, onClick }: BuildingProps) {
   return (
-    <group position={position} onClick={onClick}>
+    <FadeGroup position={position} opacity={opacity} onClick={onClick}>
       <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[1.4, 2.6, 32]} />
         <meshStandardMaterial color={color} roughness={1} side={THREE.DoubleSide} />
@@ -167,7 +202,7 @@ function CircusMaximus({ position, color, onClick }: { position: [number, number
         <boxGeometry args={[3, 0.2, 0.3]} />
         <meshStandardMaterial color="#8a7556" roughness={1} />
       </mesh>
-    </group>
+    </FadeGroup>
   );
 }
 
@@ -284,7 +319,8 @@ function CameraFlyer({ target, onArrive }: { target: [number, number, number] | 
   return null;
 }
 
-function Scene({ isNight, walkMode, flyTarget, onFlyArrive, onMonumentClick }: { isNight: boolean; walkMode: boolean; flyTarget: [number, number, number] | null; onFlyArrive: () => void; onMonumentClick: (m: Monument) => void }) {
+function Scene({ isNight, walkMode, year, flyTarget, onFlyArrive, onMonumentClick }: { isNight: boolean; walkMode: boolean; year: number; flyTarget: [number, number, number] | null; onFlyArrive: () => void; onMonumentClick: (m: Monument) => void }) {
+  const op = (i: number) => eraOpacity(year, MONUMENTS[i]);
   return (
     <>
       {isNight ? (
@@ -305,11 +341,11 @@ function Scene({ isNight, walkMode, flyTarget, onFlyArrive, onMonumentClick }: {
 
       <Ground />
 
-      <Colosseum position={MONUMENTS[0].position} color={MONUMENTS[0].color} onClick={() => onMonumentClick(MONUMENTS[0])} />
-      <Forum position={MONUMENTS[1].position} color={MONUMENTS[1].color} onClick={() => onMonumentClick(MONUMENTS[1])} />
-      <Palatine position={MONUMENTS[2].position} color={MONUMENTS[2].color} onClick={() => onMonumentClick(MONUMENTS[2])} />
-      <Pantheon position={MONUMENTS[3].position} color={MONUMENTS[3].color} onClick={() => onMonumentClick(MONUMENTS[3])} />
-      <CircusMaximus position={MONUMENTS[4].position} color={MONUMENTS[4].color} onClick={() => onMonumentClick(MONUMENTS[4])} />
+      <Colosseum position={MONUMENTS[0].position} color={MONUMENTS[0].color} opacity={op(0)} onClick={() => onMonumentClick(MONUMENTS[0])} />
+      <Forum position={MONUMENTS[1].position} color={MONUMENTS[1].color} opacity={op(1)} onClick={() => onMonumentClick(MONUMENTS[1])} />
+      <Palatine position={MONUMENTS[2].position} color={MONUMENTS[2].color} opacity={op(2)} onClick={() => onMonumentClick(MONUMENTS[2])} />
+      <Pantheon position={MONUMENTS[3].position} color={MONUMENTS[3].color} opacity={op(3)} onClick={() => onMonumentClick(MONUMENTS[3])} />
+      <CircusMaximus position={MONUMENTS[4].position} color={MONUMENTS[4].color} opacity={op(4)} onClick={() => onMonumentClick(MONUMENTS[4])} />
 
       {isNight && (
         <>
@@ -354,8 +390,10 @@ function RomeTourPage() {
   const [walkMode, setWalkMode] = useState(false);
   const [selected, setSelected] = useState<Monument | null>(null);
   const [flyTarget, setFlyTarget] = useState<[number, number, number] | null>(null);
+  const [year, setYear] = useState(100); // 100 AD default
 
-  // Compute minimap bounds
+  const yearLabel = year < 0 ? `${Math.abs(year)} BC` : `${year} AD`;
+
   const MAP_RANGE = 12;
   const toMapPct = (v: number) => ((v + MAP_RANGE) / (MAP_RANGE * 2)) * 100;
 
@@ -370,7 +408,7 @@ function RomeTourPage() {
           ← Intro
         </Link>
         <div className="text-amber-100 text-xs md:text-sm tracking-[0.4em] uppercase font-serif">
-          Roma Aeterna · 100 AD
+          Roma Aeterna · {yearLabel}
         </div>
         <div className="flex gap-2">
           <button
@@ -391,12 +429,31 @@ function RomeTourPage() {
       {/* 3D Canvas */}
       <Canvas shadows camera={{ position: [14, 10, 14], fov: 50 }} dpr={[1, 2]}>
         <Suspense fallback={null}>
-          <Scene isNight={isNight} walkMode={walkMode} flyTarget={flyTarget} onFlyArrive={() => setFlyTarget(null)} onMonumentClick={setSelected} />
+          <Scene isNight={isNight} walkMode={walkMode} year={year} flyTarget={flyTarget} onFlyArrive={() => setFlyTarget(null)} onMonumentClick={setSelected} />
         </Suspense>
       </Canvas>
 
+      {/* Time-travel slider */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 w-[min(640px,90vw)] bg-black/55 backdrop-blur-md border border-amber-200/30 rounded-2xl px-5 py-3 shadow-2xl">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-amber-100/70 text-[10px] tracking-[0.3em] uppercase font-serif">500 BC</span>
+          <span className="text-amber-100 text-sm tracking-[0.25em] font-serif">⏳ {yearLabel}</span>
+          <span className="text-amber-100/70 text-[10px] tracking-[0.3em] uppercase font-serif">476 AD</span>
+        </div>
+        <input
+          type="range"
+          min={-500}
+          max={476}
+          step={1}
+          value={year}
+          onChange={(e) => setYear(Number(e.target.value))}
+          className="w-full accent-amber-300 cursor-pointer"
+          aria-label="Time travel slider"
+        />
+      </div>
+
       {/* Hint */}
-      <div className="absolute bottom-6 left-6 z-10 text-white/80 text-[11px] tracking-[0.25em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 max-w-xs">
+      <div className="absolute bottom-24 left-6 z-10 text-white/80 text-[11px] tracking-[0.25em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 max-w-xs">
         {walkMode
           ? "Click to lock cursor · WASD to walk · Shift to run · Mouse to look · ESC to exit"
           : "Drag to rotate · Scroll to zoom · Click monuments"}
