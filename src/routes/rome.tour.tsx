@@ -23,6 +23,8 @@ type Monument = {
   position: [number, number, number];
   story: string;
   color: string;
+  built: number;   // year built (negative = BC)
+  fell: number;    // year ruined / abandoned
 };
 
 const MONUMENTS: Monument[] = [
@@ -32,6 +34,8 @@ const MONUMENTS: Monument[] = [
     position: [8, 0, -4],
     story: "Inaugurated 80 AD by Emperor Titus. 50,000 spectators roared as gladiators fought beneath the Roman sun.",
     color: "#d6c2a4",
+    built: 80,
+    fell: 600,
   },
   {
     id: "forum",
@@ -39,6 +43,8 @@ const MONUMENTS: Monument[] = [
     position: [0, 0, 0],
     story: "The beating heart of the Republic. On this spot in 44 BC, Julius Caesar was assassinated at the foot of Pompey's statue.",
     color: "#e8d8b8",
+    built: -500,
+    fell: 500,
   },
   {
     id: "palatine",
@@ -46,6 +52,8 @@ const MONUMENTS: Monument[] = [
     position: [-8, 0, 2],
     story: "Where Romulus founded Rome in 753 BC. Later home to emperors — the word 'palace' comes from this hill.",
     color: "#c9b48a",
+    built: -500,
+    fell: 550,
   },
   {
     id: "pantheon",
@@ -53,6 +61,8 @@ const MONUMENTS: Monument[] = [
     position: [-4, 0, -7],
     story: "Rebuilt by Hadrian around 126 AD. Its concrete dome remains the world's largest unreinforced dome — 1,900 years on.",
     color: "#cfb98f",
+    built: 126,
+    fell: 600,
   },
   {
     id: "circus",
@@ -60,8 +70,19 @@ const MONUMENTS: Monument[] = [
     position: [5, 0, 6],
     story: "250,000 Romans packed in to bet on chariot races. The track stretched longer than five football fields.",
     color: "#b89a72",
+    built: -329,
+    fell: 549,
   },
 ];
+
+// Fade-in over 40 years from build, fade-out over 80 years after fall
+function eraOpacity(year: number, m: Monument): number {
+  if (year < m.built - 40) return 0;
+  if (year < m.built) return (year - (m.built - 40)) / 40;
+  if (year <= m.fell) return 1;
+  if (year <= m.fell + 80) return 1 - (year - m.fell) / 80;
+  return 0;
+}
 
 // ---------- 3D Buildings ----------
 function Colosseum({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
