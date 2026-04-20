@@ -363,6 +363,7 @@ function Crowd({ count = 22 }: { count?: number }) {
 }
 
 
+function FPSController() {
   const { camera } = useThree();
   const keys = useRef({ w: false, a: false, s: false, d: false, shift: false });
   const velocity = useRef(new THREE.Vector3());
