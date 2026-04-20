@@ -1,0 +1,319 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { OrbitControls, Sky, Stars, Cloud, Html } from "@react-three/drei";
+import { Suspense, useRef, useState } from "react";
+import * as THREE from "three";
+
+export const Route = createFileRoute("/rome/tour")({
+  head: () => ({
+    meta: [
+      { title: "Tour Ancient Rome — 3D Reconstruction of the Eternal City" },
+      { name: "description", content: "Explore a 3D reconstruction of Ancient Rome's Forum, Colosseum and Palatine Hill with day/night atmosphere and historical story cards." },
+      { property: "og:title", content: "Tour Ancient Rome — 3D Reconstruction of the Eternal City" },
+      { property: "og:description", content: "Explore a 3D reconstruction of Ancient Rome's Forum, Colosseum and Palatine Hill." },
+    ],
+  }),
+  component: RomeTourPage,
+});
+
+// ---------- Monuments ----------
+type Monument = {
+  id: string;
+  name: string;
+  position: [number, number, number];
+  story: string;
+  color: string;
+};
+
+const MONUMENTS: Monument[] = [
+  {
+    id: "colosseum",
+    name: "The Colosseum",
+    position: [8, 0, -4],
+    story: "Inaugurated 80 AD by Emperor Titus. 50,000 spectators roared as gladiators fought beneath the Roman sun.",
+    color: "#d6c2a4",
+  },
+  {
+    id: "forum",
+    name: "Roman Forum",
+    position: [0, 0, 0],
+    story: "The beating heart of the Republic. On this spot in 44 BC, Julius Caesar was assassinated at the foot of Pompey's statue.",
+    color: "#e8d8b8",
+  },
+  {
+    id: "palatine",
+    name: "Palatine Hill",
+    position: [-8, 0, 2],
+    story: "Where Romulus founded Rome in 753 BC. Later home to emperors — the word 'palace' comes from this hill.",
+    color: "#c9b48a",
+  },
+  {
+    id: "pantheon",
+    name: "The Pantheon",
+    position: [-4, 0, -7],
+    story: "Rebuilt by Hadrian around 126 AD. Its concrete dome remains the world's largest unreinforced dome — 1,900 years on.",
+    color: "#cfb98f",
+  },
+  {
+    id: "circus",
+    name: "Circus Maximus",
+    position: [5, 0, 6],
+    story: "250,000 Romans packed in to bet on chariot races. The track stretched longer than five football fields.",
+    color: "#b89a72",
+  },
+];
+
+// ---------- 3D Buildings ----------
+function Colosseum({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+  return (
+    <group position={position} onClick={onClick}>
+      {/* Outer wall — cylindrical with arches */}
+      <mesh position={[0, 1.6, 0]} castShadow>
+        <cylinderGeometry args={[2.2, 2.4, 3.2, 32, 1, true]} />
+        <meshStandardMaterial color={color} roughness={0.9} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, 3.3, 0]}>
+        <torusGeometry args={[2.2, 0.15, 16, 48]} />
+        <meshStandardMaterial color={color} roughness={0.85} />
+      </mesh>
+      <mesh position={[0, 0.05, 0]}>
+        <cylinderGeometry args={[2.5, 2.5, 0.1, 32]} />
+        <meshStandardMaterial color="#8a7556" roughness={1} />
+      </mesh>
+    </group>
+  );
+}
+
+function Pantheon({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+  return (
+    <group position={position} onClick={onClick}>
+      <mesh position={[0, 1, 0]} castShadow>
+        <cylinderGeometry args={[1.6, 1.6, 2, 32]} />
+        <meshStandardMaterial color={color} roughness={0.85} />
+      </mesh>
+      <mesh position={[0, 2.6, 0]} castShadow>
+        <sphereGeometry args={[1.6, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color={color} roughness={0.8} />
+      </mesh>
+      {/* Portico columns */}
+      {[-1, -0.5, 0, 0.5, 1].map((x) => (
+        <mesh key={x} position={[x, 1.2, 1.7]} castShadow>
+          <cylinderGeometry args={[0.12, 0.12, 2.4, 12]} />
+          <meshStandardMaterial color="#efe5cf" roughness={0.7} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function Forum({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+  return (
+    <group position={position} onClick={onClick}>
+      {/* Temple base */}
+      <mesh position={[0, 0.2, 0]} castShadow>
+        <boxGeometry args={[3, 0.4, 2]} />
+        <meshStandardMaterial color="#a89270" roughness={0.95} />
+      </mesh>
+      {/* Columns */}
+      {[-1.2, -0.6, 0, 0.6, 1.2].map((x) =>
+        [-0.7, 0.7].map((z) => (
+          <mesh key={`${x}-${z}`} position={[x, 1.4, z]} castShadow>
+            <cylinderGeometry args={[0.13, 0.13, 2, 12]} />
+            <meshStandardMaterial color={color} roughness={0.7} />
+          </mesh>
+        ))
+      )}
+      {/* Roof */}
+      <mesh position={[0, 2.7, 0]} castShadow>
+        <boxGeometry args={[3.2, 0.3, 2.2]} />
+        <meshStandardMaterial color="#b89a72" roughness={0.8} />
+      </mesh>
+      {/* Pediment */}
+      <mesh position={[0, 3.05, 0]} rotation={[0, 0, 0]} castShadow>
+        <coneGeometry args={[1.2, 0.5, 4]} />
+        <meshStandardMaterial color="#b89a72" roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+function Palatine({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+  return (
+    <group position={position} onClick={onClick}>
+      <mesh position={[0, 0.6, 0]} castShadow>
+        <boxGeometry args={[3.5, 1.2, 2.5]} />
+        <meshStandardMaterial color="#7d6444" roughness={1} />
+      </mesh>
+      <mesh position={[0, 1.6, 0]} castShadow>
+        <boxGeometry args={[2.8, 0.8, 2]} />
+        <meshStandardMaterial color={color} roughness={0.9} />
+      </mesh>
+      <mesh position={[-0.8, 2.4, 0]} castShadow>
+        <boxGeometry args={[1, 0.8, 1.6]} />
+        <meshStandardMaterial color={color} roughness={0.9} />
+      </mesh>
+    </group>
+  );
+}
+
+function CircusMaximus({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+  return (
+    <group position={position} onClick={onClick}>
+      <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.4, 2.6, 32]} />
+        <meshStandardMaterial color={color} roughness={1} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, 0.3, 0]}>
+        <boxGeometry args={[3, 0.2, 0.3]} />
+        <meshStandardMaterial color="#8a7556" roughness={1} />
+      </mesh>
+    </group>
+  );
+}
+
+function Ground() {
+  return (
+    <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <planeGeometry args={[80, 80]} />
+      <meshStandardMaterial color="#a08862" roughness={1} />
+    </mesh>
+  );
+}
+
+function FlickeringTorch({ position }: { position: [number, number, number] }) {
+  const lightRef = useRef<THREE.PointLight>(null);
+  useFrame(({ clock }) => {
+    if (lightRef.current) {
+      lightRef.current.intensity = 1.2 + Math.sin(clock.elapsedTime * 8) * 0.3 + Math.random() * 0.2;
+    }
+  });
+  return (
+    <group position={position}>
+      <mesh>
+        <cylinderGeometry args={[0.04, 0.04, 0.6, 8]} />
+        <meshStandardMaterial color="#3a2410" />
+      </mesh>
+      <mesh position={[0, 0.4, 0]}>
+        <sphereGeometry args={[0.12, 12, 12]} />
+        <meshBasicMaterial color="#ffaa44" />
+      </mesh>
+      <pointLight ref={lightRef} position={[0, 0.5, 0]} color="#ff8833" intensity={1.4} distance={6} />
+    </group>
+  );
+}
+
+function Scene({ isNight, onMonumentClick }: { isNight: boolean; onMonumentClick: (m: Monument) => void }) {
+  return (
+    <>
+      {isNight ? (
+        <>
+          <Stars radius={100} depth={50} count={3000} factor={4} fade />
+          <ambientLight intensity={0.15} color="#4a5a8a" />
+          <directionalLight position={[5, 10, 5]} intensity={0.3} color="#8090c0" />
+        </>
+      ) : (
+        <>
+          <Sky sunPosition={[10, 8, 5]} turbidity={4} rayleigh={1.5} />
+          <ambientLight intensity={0.6} color="#fff2d8" />
+          <directionalLight position={[10, 12, 5]} intensity={1.5} color="#fff0c8" castShadow />
+          <Cloud position={[-15, 12, -10]} speed={0.2} opacity={0.5} />
+          <Cloud position={[15, 14, -8]} speed={0.15} opacity={0.4} />
+        </>
+      )}
+
+      <Ground />
+
+      <Colosseum position={MONUMENTS[0].position} color={MONUMENTS[0].color} onClick={() => onMonumentClick(MONUMENTS[0])} />
+      <Forum position={MONUMENTS[1].position} color={MONUMENTS[1].color} onClick={() => onMonumentClick(MONUMENTS[1])} />
+      <Palatine position={MONUMENTS[2].position} color={MONUMENTS[2].color} onClick={() => onMonumentClick(MONUMENTS[2])} />
+      <Pantheon position={MONUMENTS[3].position} color={MONUMENTS[3].color} onClick={() => onMonumentClick(MONUMENTS[3])} />
+      <CircusMaximus position={MONUMENTS[4].position} color={MONUMENTS[4].color} onClick={() => onMonumentClick(MONUMENTS[4])} />
+
+      {isNight && (
+        <>
+          <FlickeringTorch position={[3, 0.3, 1]} />
+          <FlickeringTorch position={[-3, 0.3, -2]} />
+          <FlickeringTorch position={[6, 0.3, -2]} />
+          <FlickeringTorch position={[-6, 0.3, 4]} />
+        </>
+      )}
+
+      {/* Floating labels */}
+      {MONUMENTS.map((m) => (
+        <Html key={m.id} position={[m.position[0], 4.2, m.position[2]]} center distanceFactor={14}>
+          <div className="px-2 py-0.5 rounded bg-black/60 text-amber-100 text-[10px] tracking-[0.2em] uppercase whitespace-nowrap pointer-events-none border border-amber-200/20">
+            {m.name}
+          </div>
+        </Html>
+      ))}
+
+      <OrbitControls
+        enablePan
+        enableZoom
+        maxPolarAngle={Math.PI / 2.1}
+        minDistance={6}
+        maxDistance={30}
+        autoRotate
+        autoRotateSpeed={0.3}
+      />
+    </>
+  );
+}
+
+// ---------- Page ----------
+function RomeTourPage() {
+  const [isNight, setIsNight] = useState(false);
+  const [selected, setSelected] = useState<Monument | null>(null);
+
+  return (
+    <div className={`relative w-screen h-screen overflow-hidden ${isNight ? "bg-[#0a0e22]" : "bg-[#cfb98f]"}`}>
+      {/* Top bar */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-5">
+        <Link
+          to="/rome"
+          className="text-white text-xs tracking-[0.3em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 hover:bg-black/60 transition"
+        >
+          ← Intro
+        </Link>
+        <div className="text-amber-100 text-xs md:text-sm tracking-[0.4em] uppercase font-serif">
+          Roma Aeterna · 100 AD
+        </div>
+        <button
+          onClick={() => setIsNight((v) => !v)}
+          className="text-white text-xs tracking-[0.3em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 hover:bg-black/60 transition"
+        >
+          {isNight ? "☀ Day" : "☾ Night"}
+        </button>
+      </div>
+
+      {/* 3D Canvas */}
+      <Canvas shadows camera={{ position: [14, 10, 14], fov: 50 }} dpr={[1, 2]}>
+        <Suspense fallback={null}>
+          <Scene isNight={isNight} onMonumentClick={setSelected} />
+        </Suspense>
+      </Canvas>
+
+      {/* Hint */}
+      <div className="absolute bottom-6 left-6 z-10 text-white/80 text-[11px] tracking-[0.25em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/15">
+        Drag to rotate · Scroll to zoom · Click monuments
+      </div>
+
+      {/* Story card */}
+      {selected && (
+        <div className="absolute bottom-8 right-8 z-30 max-w-sm bg-black/70 backdrop-blur-xl border border-amber-200/30 rounded-2xl p-6 text-white shadow-2xl">
+          <div className="flex items-start justify-between mb-3">
+            <h3 className="font-serif text-2xl text-amber-100">{selected.name}</h3>
+            <button
+              onClick={() => setSelected(null)}
+              className="text-white/60 hover:text-white text-xl leading-none"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+          <p className="text-white/85 leading-relaxed text-sm">{selected.story}</p>
+        </div>
+      )}
+    </div>
+  );
+}
