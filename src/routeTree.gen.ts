@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RomeRouteImport } from './routes/rome'
 import { Route as GalaxyRouteImport } from './routes/galaxy'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
+const RomeRoute = RomeRouteImport.update({
+  id: '/rome',
+  path: '/rome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GalaxyRoute = GalaxyRouteImport.update({
   id: '/galaxy',
   path: '/galaxy',
@@ -40,12 +46,14 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/galaxy': typeof GalaxyRoute
+  '/rome': typeof RomeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/galaxy': typeof GalaxyRoute
+  '/rome': typeof RomeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/galaxy': typeof GalaxyRoute
+  '/rome': typeof RomeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/auth' | '/galaxy'
+  fullPaths: '/' | '/admin' | '/auth' | '/galaxy' | '/rome'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/auth' | '/galaxy'
-  id: '__root__' | '/' | '/admin' | '/auth' | '/galaxy'
+  to: '/' | '/admin' | '/auth' | '/galaxy' | '/rome'
+  id: '__root__' | '/' | '/admin' | '/auth' | '/galaxy' | '/rome'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,10 +76,18 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   GalaxyRoute: typeof GalaxyRoute
+  RomeRoute: typeof RomeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/rome': {
+      id: '/rome'
+      path: '/rome'
+      fullPath: '/rome'
+      preLoaderRoute: typeof RomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/galaxy': {
       id: '/galaxy'
       path: '/galaxy'
@@ -107,7 +124,17 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   GalaxyRoute: GalaxyRoute,
+  RomeRoute: RomeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
