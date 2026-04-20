@@ -85,10 +85,29 @@ function eraOpacity(year: number, m: Monument): number {
 }
 
 // ---------- 3D Buildings ----------
-function Colosseum({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+type BuildingProps = { position: [number, number, number]; color: string; opacity: number; onClick: () => void };
+
+function FadeGroup({ opacity, children, position, onClick }: { opacity: number; children: React.ReactNode; position: [number, number, number]; onClick: () => void }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame(() => {
+    if (!ref.current) return;
+    ref.current.visible = opacity > 0.01;
+    ref.current.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (mesh.isMesh && mesh.material) {
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        mat.transparent = true;
+        mat.opacity = opacity;
+        mat.depthWrite = opacity > 0.95;
+      }
+    });
+  });
+  return <group ref={ref} position={position} onClick={onClick}>{children}</group>;
+}
+
+function Colosseum({ position, color, opacity, onClick }: BuildingProps) {
   return (
-    <group position={position} onClick={onClick}>
-      {/* Outer wall — cylindrical with arches */}
+    <FadeGroup position={position} opacity={opacity} onClick={onClick}>
       <mesh position={[0, 1.6, 0]} castShadow>
         <cylinderGeometry args={[2.2, 2.4, 3.2, 32, 1, true]} />
         <meshStandardMaterial color={color} roughness={0.9} side={THREE.DoubleSide} />
@@ -101,13 +120,13 @@ function Colosseum({ position, color, onClick }: { position: [number, number, nu
         <cylinderGeometry args={[2.5, 2.5, 0.1, 32]} />
         <meshStandardMaterial color="#8a7556" roughness={1} />
       </mesh>
-    </group>
+    </FadeGroup>
   );
 }
 
-function Pantheon({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+function Pantheon({ position, color, opacity, onClick }: BuildingProps) {
   return (
-    <group position={position} onClick={onClick}>
+    <FadeGroup position={position} opacity={opacity} onClick={onClick}>
       <mesh position={[0, 1, 0]} castShadow>
         <cylinderGeometry args={[1.6, 1.6, 2, 32]} />
         <meshStandardMaterial color={color} roughness={0.85} />
@@ -116,26 +135,23 @@ function Pantheon({ position, color, onClick }: { position: [number, number, num
         <sphereGeometry args={[1.6, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshStandardMaterial color={color} roughness={0.8} />
       </mesh>
-      {/* Portico columns */}
       {[-1, -0.5, 0, 0.5, 1].map((x) => (
         <mesh key={x} position={[x, 1.2, 1.7]} castShadow>
           <cylinderGeometry args={[0.12, 0.12, 2.4, 12]} />
           <meshStandardMaterial color="#efe5cf" roughness={0.7} />
         </mesh>
       ))}
-    </group>
+    </FadeGroup>
   );
 }
 
-function Forum({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+function Forum({ position, color, opacity, onClick }: BuildingProps) {
   return (
-    <group position={position} onClick={onClick}>
-      {/* Temple base */}
+    <FadeGroup position={position} opacity={opacity} onClick={onClick}>
       <mesh position={[0, 0.2, 0]} castShadow>
         <boxGeometry args={[3, 0.4, 2]} />
         <meshStandardMaterial color="#a89270" roughness={0.95} />
       </mesh>
-      {/* Columns */}
       {[-1.2, -0.6, 0, 0.6, 1.2].map((x) =>
         [-0.7, 0.7].map((z) => (
           <mesh key={`${x}-${z}`} position={[x, 1.4, z]} castShadow>
@@ -144,23 +160,21 @@ function Forum({ position, color, onClick }: { position: [number, number, number
           </mesh>
         ))
       )}
-      {/* Roof */}
       <mesh position={[0, 2.7, 0]} castShadow>
         <boxGeometry args={[3.2, 0.3, 2.2]} />
         <meshStandardMaterial color="#b89a72" roughness={0.8} />
       </mesh>
-      {/* Pediment */}
-      <mesh position={[0, 3.05, 0]} rotation={[0, 0, 0]} castShadow>
+      <mesh position={[0, 3.05, 0]} castShadow>
         <coneGeometry args={[1.2, 0.5, 4]} />
         <meshStandardMaterial color="#b89a72" roughness={0.8} />
       </mesh>
-    </group>
+    </FadeGroup>
   );
 }
 
-function Palatine({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+function Palatine({ position, color, opacity, onClick }: BuildingProps) {
   return (
-    <group position={position} onClick={onClick}>
+    <FadeGroup position={position} opacity={opacity} onClick={onClick}>
       <mesh position={[0, 0.6, 0]} castShadow>
         <boxGeometry args={[3.5, 1.2, 2.5]} />
         <meshStandardMaterial color="#7d6444" roughness={1} />
@@ -173,13 +187,13 @@ function Palatine({ position, color, onClick }: { position: [number, number, num
         <boxGeometry args={[1, 0.8, 1.6]} />
         <meshStandardMaterial color={color} roughness={0.9} />
       </mesh>
-    </group>
+    </FadeGroup>
   );
 }
 
-function CircusMaximus({ position, color, onClick }: { position: [number, number, number]; color: string; onClick: () => void }) {
+function CircusMaximus({ position, color, opacity, onClick }: BuildingProps) {
   return (
-    <group position={position} onClick={onClick}>
+    <FadeGroup position={position} opacity={opacity} onClick={onClick}>
       <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[1.4, 2.6, 32]} />
         <meshStandardMaterial color={color} roughness={1} side={THREE.DoubleSide} />
@@ -188,7 +202,7 @@ function CircusMaximus({ position, color, onClick }: { position: [number, number
         <boxGeometry args={[3, 0.2, 0.3]} />
         <meshStandardMaterial color="#8a7556" roughness={1} />
       </mesh>
-    </group>
+    </FadeGroup>
   );
 }
 
