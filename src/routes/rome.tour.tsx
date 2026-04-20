@@ -473,6 +473,8 @@ function Scene({ isNight, walkMode, year, flyTarget, onFlyArrive, onMonumentClic
       <Pantheon position={MONUMENTS[3].position} color={MONUMENTS[3].color} opacity={op(3)} onClick={() => onMonumentClick(MONUMENTS[3])} />
       <CircusMaximus position={MONUMENTS[4].position} color={MONUMENTS[4].color} opacity={op(4)} onClick={() => onMonumentClick(MONUMENTS[4])} />
 
+      <Crowd count={22} />
+
       {isNight && (
         <>
           <FlickeringTorch position={[3, 0.3, 1]} />
