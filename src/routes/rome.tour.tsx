@@ -318,6 +318,7 @@ function Scene({ isNight, walkMode, onMonumentClick }: { isNight: boolean; walkM
 // ---------- Page ----------
 function RomeTourPage() {
   const [isNight, setIsNight] = useState(false);
+  const [walkMode, setWalkMode] = useState(false);
   const [selected, setSelected] = useState<Monument | null>(null);
 
   return (
@@ -333,25 +334,42 @@ function RomeTourPage() {
         <div className="text-amber-100 text-xs md:text-sm tracking-[0.4em] uppercase font-serif">
           Roma Aeterna · 100 AD
         </div>
-        <button
-          onClick={() => setIsNight((v) => !v)}
-          className="text-white text-xs tracking-[0.3em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 hover:bg-black/60 transition"
-        >
-          {isNight ? "☀ Day" : "☾ Night"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { setSelected(null); setWalkMode((v) => !v); }}
+            className="text-white text-xs tracking-[0.3em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 hover:bg-black/60 transition"
+          >
+            {walkMode ? "🛰 Orbit" : "🚶 Walk"}
+          </button>
+          <button
+            onClick={() => setIsNight((v) => !v)}
+            className="text-white text-xs tracking-[0.3em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 hover:bg-black/60 transition"
+          >
+            {isNight ? "☀ Day" : "☾ Night"}
+          </button>
+        </div>
       </div>
 
       {/* 3D Canvas */}
       <Canvas shadows camera={{ position: [14, 10, 14], fov: 50 }} dpr={[1, 2]}>
         <Suspense fallback={null}>
-          <Scene isNight={isNight} onMonumentClick={setSelected} />
+          <Scene isNight={isNight} walkMode={walkMode} onMonumentClick={setSelected} />
         </Suspense>
       </Canvas>
 
       {/* Hint */}
-      <div className="absolute bottom-6 left-6 z-10 text-white/80 text-[11px] tracking-[0.25em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/15">
-        Drag to rotate · Scroll to zoom · Click monuments
+      <div className="absolute bottom-6 left-6 z-10 text-white/80 text-[11px] tracking-[0.25em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 max-w-xs">
+        {walkMode
+          ? "Click to lock cursor · WASD to walk · Shift to run · Mouse to look · ESC to exit"
+          : "Drag to rotate · Scroll to zoom · Click monuments"}
       </div>
+
+      {/* Walk-mode crosshair */}
+      {walkMode && (
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
+          <div className="w-1 h-1 rounded-full bg-white/80 shadow-[0_0_8px_rgba(0,0,0,0.6)]" />
+        </div>
+      )}
 
       {/* Story card */}
       {selected && (
