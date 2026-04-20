@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Sky, Stars, Cloud, Html } from "@react-three/drei";
-import { Suspense, useRef, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls, PointerLockControls, Sky, Stars, Cloud, Html } from "@react-three/drei";
+import { Suspense, useRef, useState, useEffect } from "react";
 import * as THREE from "three";
 
 export const Route = createFileRoute("/rome/tour")({
