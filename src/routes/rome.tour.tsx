@@ -319,7 +319,8 @@ function CameraFlyer({ target, onArrive }: { target: [number, number, number] | 
   return null;
 }
 
-function Scene({ isNight, walkMode, flyTarget, onFlyArrive, onMonumentClick }: { isNight: boolean; walkMode: boolean; flyTarget: [number, number, number] | null; onFlyArrive: () => void; onMonumentClick: (m: Monument) => void }) {
+function Scene({ isNight, walkMode, year, flyTarget, onFlyArrive, onMonumentClick }: { isNight: boolean; walkMode: boolean; year: number; flyTarget: [number, number, number] | null; onFlyArrive: () => void; onMonumentClick: (m: Monument) => void }) {
+  const op = (i: number) => eraOpacity(year, MONUMENTS[i]);
   return (
     <>
       {isNight ? (
@@ -340,11 +341,11 @@ function Scene({ isNight, walkMode, flyTarget, onFlyArrive, onMonumentClick }: {
 
       <Ground />
 
-      <Colosseum position={MONUMENTS[0].position} color={MONUMENTS[0].color} onClick={() => onMonumentClick(MONUMENTS[0])} />
-      <Forum position={MONUMENTS[1].position} color={MONUMENTS[1].color} onClick={() => onMonumentClick(MONUMENTS[1])} />
-      <Palatine position={MONUMENTS[2].position} color={MONUMENTS[2].color} onClick={() => onMonumentClick(MONUMENTS[2])} />
-      <Pantheon position={MONUMENTS[3].position} color={MONUMENTS[3].color} onClick={() => onMonumentClick(MONUMENTS[3])} />
-      <CircusMaximus position={MONUMENTS[4].position} color={MONUMENTS[4].color} onClick={() => onMonumentClick(MONUMENTS[4])} />
+      <Colosseum position={MONUMENTS[0].position} color={MONUMENTS[0].color} opacity={op(0)} onClick={() => onMonumentClick(MONUMENTS[0])} />
+      <Forum position={MONUMENTS[1].position} color={MONUMENTS[1].color} opacity={op(1)} onClick={() => onMonumentClick(MONUMENTS[1])} />
+      <Palatine position={MONUMENTS[2].position} color={MONUMENTS[2].color} opacity={op(2)} onClick={() => onMonumentClick(MONUMENTS[2])} />
+      <Pantheon position={MONUMENTS[3].position} color={MONUMENTS[3].color} opacity={op(3)} onClick={() => onMonumentClick(MONUMENTS[3])} />
+      <CircusMaximus position={MONUMENTS[4].position} color={MONUMENTS[4].color} opacity={op(4)} onClick={() => onMonumentClick(MONUMENTS[4])} />
 
       {isNight && (
         <>
