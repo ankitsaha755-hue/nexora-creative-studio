@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexora Digital — Invoice Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    /* Nexora Digital dark theme tokens (mirrors src/styles.css) */
+    --bg: hsl(230 35% 5%);
+    --bg-2: hsl(230 30% 8%);
+    --bg-3: hsl(230 25% 12%);
+    --card: hsl(230 30% 10%);
+    --foreground: hsl(210 40% 98%);
+    --muted-fg: hsl(220 15% 65%);
+    --border: hsl(210 40% 98% / 0.08);
+    --border-strong: hsl(210 40% 98% / 0.18);
+    --primary: hsl(187 100% 55%);          /* cyan */
+    --primary-glow: hsl(187 100% 65%);
+    --secondary: hsl(270 90% 65%);          /* purple */
+    --accent: hsl(290 100% 65%);            /* magenta */
+    --destructive: hsl(0 84% 60%);
+    --gradient-primary: linear-gradient(135deg, hsl(187 100% 55%) 0%, hsl(270 90% 65%) 50%, hsl(290 100% 65%) 100%);
+    --shadow-glow: 0 0 40px hsl(187 100% 55% / 0.35);
+    --shadow-glow-purple: 0 0 60px hsl(270 90% 65% / 0.4);
+    --shadow-elegant: 0 25px 60px -15px hsl(0 0% 0% / 0.7);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bg);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, hsl(270 90% 65% / 0.12), transparent 50%),
+      radial-gradient(ellipse at 80% 80%, hsl(187 100% 55% / 0.12), transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+  .font-display { font-family: 'Orbitron', sans-serif; letter-spacing: 0.04em; }
+
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ── TOP NAV ── */
+  .topbar {
+    background: hsl(230 30% 8% / 0.55);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-transform: uppercase;
+  }
+  .topbar-brand .dot {
+    width: 10px; height: 10px;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 16px var(--primary);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100%{opacity:1;transform:scale(1)}
+    50%{opacity:0.6;transform:scale(1.3)}
+  }
+  .topbar-right { display: flex; gap: 10px; align-items: center; }
+
+  .btn-clear {
+    background: hsl(230 30% 8% / 0.5);
+    border: 1px solid var(--border-strong);
+    color: var(--muted-fg);
+    padding: 9px 18px;
+    border-radius: 9999px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .btn-clear:hover {
+    border-color: var(--primary);
+    color: var(--foreground);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .btn-download {
+    background: var(--gradient-primary);
+    background-size: 200% 200%;
+    border: none;
+    color: hsl(230 35% 5%);
+    padding: 10px 22px;
+    border-radius: 9999px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--shadow-glow);
+  }
+  .btn-download:hover {
+    background-position: 100% 100%;
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 0 60px hsl(187 100% 55% / 0.6);
+  }
+  .btn-download svg { width: 15px; height: 15px; }
+
+  /* ── MAIN ── */
+  .main {
+    max-width: 920px;
+    margin: 40px auto;
+    padding: 0 24px 80px;
+  }
+  .page-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .page-sub {
+    font-size: 14px;
+    color: var(--muted-fg);
+    margin-bottom: 32px;
+  }
+
+  /* ── INVOICE CARD (glass) ── */
+  .invoice-card {
+    background: linear-gradient(145deg, hsl(230 30% 10% / 0.8), hsl(230 35% 6% / 0.6));
+    backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: var(--shadow-elegant);
+    overflow: hidden;
+    animation: fadeUp 0.5s cubic-bezier(0.4,0,0.2,1) both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(20px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  /* ── INVOICE HEADER ── */
+  .inv-header {
+    background:
+      radial-gradient(circle at 80% 0%, hsl(290 100% 65% / 0.18) 0%, transparent 60%),
+      radial-gradient(circle at 0% 100%, hsl(187 100% 55% / 0.15) 0%, transparent 60%),
+      linear-gradient(135deg, hsl(230 35% 8%), hsl(230 30% 6%));
+    padding: 36px 40px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .inv-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gradient-primary);
+    opacity: 0.8;
+  }
+  .brand-block { position: relative; }
+  .brand-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .brand-tagline {
+    font-size: 11px;
+    color: var(--muted-fg);
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    margin-bottom: 18px;
+  }
+  .brand-contacts { display: flex; flex-direction: column; gap: 4px; }
+  .brand-contact-item {
+    font-size: 12px;
+    color: hsl(210 40% 98% / 0.7);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .contact-icon { width: 14px; height: 14px; opacity: 0.7; flex-shrink: 0; stroke: var(--primary); }
+
+  .inv-meta-block { text-align: right; position: relative; }
+  .inv-label {
+    font-size: 11px;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .inv-title-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--foreground);
+    letter-spacing: 6px;
+    margin-bottom: 22px;
+  }
+
+  .inv-number-row { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .meta-row { display: flex; align-items: center; gap: 10px; }
+  .meta-label {
+    font-size: 10px;
+    color: var(--muted-fg);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    width: 60px;
+    text-align: right;
+    font-weight: 500;
+  }
+  .meta-input {
+    background: hsl(230 25% 12% / 0.8);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--foreground);
+    text-align: center;
+    width: 140px;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .meta-input:focus {
+    border-color: var(--primary);
+    background: hsl(230 25% 14%);
+    box-shadow: 0 0 0 3px hsl(187 100% 55% / 0.2);
+  }
+  .meta-input::placeholder { color: hsl(220 15% 50%); }
+  .meta-input::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.6); cursor: pointer; }
+
+  /* ── BODY ── */
+  .inv-body { padding: 36px 40px; }
+  .section-block { margin-bottom: 32px; }
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .section-line { height: 1px; flex: 1; background: var(--border); }
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    white-space: nowrap;
+  }
+  .section-icon {
+    width: 32px; height: 32px;
+    background: hsl(187 100% 55% / 0.12);
+    border: 1px solid hsl(187 100% 55% / 0.3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .section-icon svg { width: 15px; height: 15px; stroke: var(--primary); fill: none; }
+
+  /* BILL TO */
+  .bill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-group.full { grid-column: 1 / -1; }
+  .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted-fg);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+  }
+  .field-input {
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--foreground);
+    background: hsl(230 25% 12% / 0.6);
+    outline: none;
+    transition: all 0.2s;
+  }
+  .field-input:focus {
+    border-color: var(--primary);
+    background: hsl(230 25% 14%);
+    box-shadow: 0 0 0 3px hsl(187 100% 55% / 0.2);
+  }
+  .field-input::placeholder { color: hsl(220 15% 45%); }
+
+  /* SERVICES */
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .svc-label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 13px;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+    background: hsl(230 25% 12% / 0.5);
+    font-size: 12.5px;
+    color: hsl(210 40% 98% / 0.8);
+    font-weight: 400;
+    user-select: none;
+  }
+  .svc-label:hover {
+    border-color: hsl(187 100% 55% / 0.5);
+    background: hsl(230 25% 14%);
+    color: var(--foreground);
+  }
+  .svc-label.checked {
+    border-color: var(--primary);
+    background: hsl(187 100% 55% / 0.12);
+    color: var(--primary-glow);
+    font-weight: 600;
+    box-shadow: 0 0 16px hsl(187 100% 55% / 0.25);
+  }
+  .svc-check {
+    width: 16px; height: 16px;
+    border: 1.5px solid hsl(220 15% 45%);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    background: hsl(230 25% 8%);
+  }
+  .svc-label.checked .svc-check {
+    background: var(--gradient-primary);
+    border-color: var(--primary);
+  }
+  .svc-check svg { width: 10px; height: 10px; display: none; }
+  .svc-label.checked .svc-check svg { display: block; }
+  .svc-label input[type=checkbox] { display: none; }
+
+  /* PAYMENT TABLE */
+  .pay-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+  }
+  .pay-table thead tr {
+    background: linear-gradient(135deg, hsl(187 100% 55% / 0.15), hsl(270 90% 65% / 0.15));
+  }
+  .pay-table thead th {
+    padding: 13px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    text-align: left;
+  }
+  .pay-table thead th:last-child { text-align: right; }
+  .pay-table tbody tr { border-bottom: 1px solid var(--border); background: hsl(230 25% 10% / 0.5); }
+  .pay-table tbody tr:last-child { border-bottom: none; }
+  .pay-table tbody tr:nth-child(even) { background: hsl(230 25% 12% / 0.6); }
+  .pay-table td {
+    padding: 13px 16px;
+    font-size: 14px;
+    color: var(--foreground);
+    vertical-align: middle;
+  }
+  .pay-table td:last-child { text-align: right; }
+  .pay-table .due-row td { color: hsl(0 84% 70%); font-weight: 700; }
+  .pay-table .ad-row td { color: var(--muted-fg); font-style: italic; font-size: 13px; }
+  .amount-input {
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--foreground);
+    background: hsl(230 25% 8%);
+    outline: none;
+    width: 150px;
+    text-align: right;
+    transition: all 0.2s;
+  }
+  .amount-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px hsl(187 100% 55% / 0.2);
+  }
+  .due-row .amount-input {
+    color: hsl(0 84% 70%);
+    font-weight: 700;
+    background: hsl(0 84% 60% / 0.1);
+    border-color: hsl(0 84% 60% / 0.4);
+  }
+  .rs-prefix { font-size: 13px; color: var(--muted-fg); margin-right: 4px; font-weight: 600; }
+
+  /* PAYMENT METHOD */
+  .pm-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pm-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border: 1px solid var(--border-strong);
+    border-radius: 9999px;
+    cursor: pointer;
+    font-size: 13px;
+    color: hsl(210 40% 98% / 0.7);
+    transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+    background: hsl(230 25% 12% / 0.6);
+    user-select: none;
+    font-weight: 500;
+  }
+  .pm-pill:hover {
+    border-color: hsl(270 90% 65% / 0.6);
+    color: var(--foreground);
+  }
+  .pm-pill.checked {
+    border-color: transparent;
+    background: var(--gradient-primary);
+    color: hsl(230 35% 5%);
+    font-weight: 700;
+    box-shadow: var(--shadow-glow);
+  }
+  .pm-pill input { display: none; }
+
+  /* T&C */
+  .tc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tc-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: hsl(230 25% 12% / 0.5);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 12.5px;
+    color: hsl(210 40% 98% / 0.75);
+    line-height: 1.55;
+  }
+  .tc-bullet {
+    width: 6px; height: 6px;
+    background: var(--primary);
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+    box-shadow: 0 0 8px var(--primary);
+  }
+
+  /* SIGNATURE */
+  .sig-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-top: 8px;
+  }
+  .sig-box { text-align: center; }
+  .sig-line-el {
+    width: 220px;
+    border-bottom: 1.5px solid var(--primary);
+    height: 36px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 12px hsl(187 100% 55% / 0.4);
+  }
+  .sig-caption { font-size: 11px; color: var(--muted-fg); letter-spacing: 0.8px; }
+
+  /* FOOTER */
+  .inv-footer {
+    background: linear-gradient(135deg, hsl(230 35% 6%), hsl(230 30% 8%));
+    border-top: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+  }
+  .inv-footer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--gradient-primary);
+    opacity: 0.6;
+  }
+  .footer-thanks {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 0.05em;
+  }
+  .footer-note {
+    font-size: 11px;
+    color: var(--muted-fg);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: hsl(230 30% 10% / 0.95);
+    backdrop-filter: blur(20px);
+    color: var(--foreground);
+    padding: 14px 22px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-elegant), var(--shadow-glow);
+    border: 1px solid var(--border-strong);
+    border-left: 3px solid var(--primary);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast-icon { font-size: 16px; color: var(--primary); }
+
+  @media (max-width: 700px) {
+    .inv-header { flex-direction: column; gap: 24px; padding: 24px 20px; }
+    .inv-meta-block { text-align: left; }
+    .inv-number-row { align-items: flex-start; }
+    .bill-grid { grid-template-columns: 1fr; }
+    .services-grid { grid-template-columns: 1fr 1fr; }
+    .tc-grid { grid-template-columns: 1fr; }
+    .inv-body { padding: 24px 20px; }
+    .inv-footer { flex-direction: column; gap: 8px; text-align: center; padding: 18px 20px; }
+    .topbar { padding: 0 16px; }
+    .page-title { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topbar">
+  <div class="topbar-brand">
+    <span class="dot"></span>
+    <span class="text-gradient">Nexora Digital</span>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-clear" onclick="clearForm()">↺ Clear Form</button>
+    <button class="btn-download" onclick="generatePDF()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v13M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>
+      Download PDF
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <h1 class="page-title">New <span class="text-gradient">Invoice</span></h1>
+  <p class="page-sub">Fill in the details below and click Download PDF to generate a professional invoice.</p>
+
+  <div class="invoice-card">
+
+    <!-- HEADER -->
+    <div class="inv-header">
+      <div class="brand-block">
+        <div class="brand-name">Nexora Digital</div>
+        <div class="brand-tagline">Digital Marketing &amp; Tech Solutions</div>
+        <div class="brand-contacts">
+          <div class="brand-contact-item">
+            <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            digitalnexora11@gmail.com
+          </div>
+          <div class="brand-contact-item">
+            <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.24h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l1.83-1.83a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            +91 93302 52564
+          </div>
+          <div class="brand-contact-item">
+            <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.24h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l1.83-1.83a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            +91 96741 26372
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-meta-block">
+        <div class="inv-label">Document</div>
+        <div class="inv-title-text">INVOICE</div>
+        <div class="inv-number-row">
+          <div class="meta-row">
+            <span class="meta-label">No.</span>
+            <input class="meta-input" type="text" id="inv-no" value="ND-001" placeholder="ND-001">
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Date</span>
+            <input class="meta-input" type="date" id="inv-date">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="inv-body">
+
+      <!-- BILL TO -->
+      <div class="section-block">
+        <div class="section-head">
+          <div class="section-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <span class="section-label">Bill To</span>
+          <div class="section-line"></div>
+        </div>
+        <div class="bill-grid">
+          <div class="field-group">
+            <span class="field-label">Client Name</span>
+            <input class="field-input" type="text" id="client-name" placeholder="Full name">
+          </div>
+          <div class="field-group">
+            <span class="field-label">Business Name</span>
+            <input class="field-input" type="text" id="biz-name" placeholder="Company / Shop name">
+          </div>
+          <div class="field-group">
+            <span class="field-label">Phone Number</span>
+            <input class="field-input" type="tel" id="client-phone" placeholder="+91 XXXXX XXXXX">
+          </div>
+          <div class="field-group">
+            <span class="field-label">Email Address</span>
+            <input class="field-input" type="email" id="client-email" placeholder="client@email.com">
+          </div>
+        </div>
+      </div>
+
+      <!-- SERVICES -->
+      <div class="section-block">
+        <div class="section-head">
+          <div class="section-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <span class="section-label">Services Provided</span>
+          <div class="section-line"></div>
+        </div>
+        <div class="services-grid" id="services-grid">
+          <label class="svc-label" onclick="toggleSvc(this, event)">
+            <input type="checkbox" value="Facebook Ads Campaign Management">
+            <div class="svc-check"><svg viewBox="0 0 12 12" fill="none" stroke="hsl(230 35% 5%)" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+            Facebook Ads Campaign
+          </label>
+          <label class="svc-label" onclick="toggleSvc(this, event)">
+            <input type="checkbox" value="Facebook Group Marketing">
+            <div class="svc-check"><svg viewBox="0 0 12 12" fill="none" stroke="hsl(230 35% 5%)" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+            Facebook Group Marketing
+          </label>
+          <label class="svc-label" onclick="toggleSvc(this, event)">
+            <input type="checkbox" value="Review & Feedback Management">
+            <div class="svc-check"><svg viewBox="0 0 12 12" fill="none" stroke="hsl(230 35% 5%)" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+            Review &amp; Feedback Mgmt
+          </label>
+          <label class="svc-label" onclick="toggleSvc(this, event)">
+            <input type="checkbox" value="Website Development">
+            <div class="svc-check"><svg viewBox="0 0 12 12" fill="none" stroke="hsl(230 35% 5%)" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+            Website Development
+          </label>
+          <label class="svc-label" onclick="toggleSvc(this, event)">
+            <input type="checkbox" value="App Development">
+            <div class="svc-check"><svg viewBox="0 0 12 12" fill="none" stroke="hsl(230 35% 5%)" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+            App Development
+          </label>
+          <label class="svc-label" onclick="toggleSvc(this, event)">
+            <input type="checkbox" value="Web Application Development">
+            <div class="svc-check"><svg viewBox="0 0 12 12" fill="none" stroke="hsl(230 35% 5%)" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+            Web App Development
+          </label>
+          <label class="svc-label" onclick="toggleSvc(this, event)">
+            <input type="checkbox" value="PowerPoint Design">
+            <div class="svc-check"><svg viewBox="0 0 12 12" fill="none" stroke="hsl(230 35% 5%)" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+            PowerPoint Design
+          </label>
+          <label class="svc-label" onclick="toggleSvc(this, event)">
+            <input type="checkbox" value="Branding / Lead Generation">
+            <div class="svc-check"><svg viewBox="0 0 12 12" fill="none" stroke="hsl(230 35% 5%)" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+            Branding / Lead Generation
+          </label>
+          <label class="svc-label" onclick="toggleSvc(this, event)">
+            <input type="checkbox" value="Logo Generation">
+            <div class="svc-check"><svg viewBox="0 0 12 12" fill="none" stroke="hsl(230 35% 5%)" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+            Logo Generation
+          </label>
+          <label class="svc-label" onclick="toggleSvc(this, event)">
+            <input type="checkbox" value="Data Management & Analytics">
+            <div class="svc-check"><svg viewBox="0 0 12 12" fill="none" stroke="hsl(230 35% 5%)" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+            Data Mgmt &amp; Analytics
+          </label>
+          <label class="svc-label" onclick="toggleSvc(this, event)">
+            <input type="checkbox" value="Automation">
+            <div class="svc-check"><svg viewBox="0 0 12 12" fill="none" stroke="hsl(230 35% 5%)" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+            Automation
+          </label>
+        </div>
+      </div>
+
+      <!-- PAYMENT DETAILS -->
+      <div class="section-block">
+        <div class="section-head">
+          <div class="section-icon">
+            <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          </div>
+          <span class="section-label">Payment Details</span>
+          <div class="section-line"></div>
+        </div>
+        <table class="pay-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Service Charge <span style="font-size:12px;color:hsl(220 15% 55%)">(15 Days)</span></td>
+              <td>
+                <span class="rs-prefix">₹</span>
+                <input class="amount-input" type="number" id="svc-charge" placeholder="0" min="0" oninput="calcDue()">
+              </td>
+            </tr>
+            <tr>
+              <td>Advance Paid</td>
+              <td>
+                <span class="rs-prefix">₹</span>
+                <input class="amount-input" type="number" id="advance" placeholder="0" min="0" oninput="calcDue()">
+              </td>
+            </tr>
+            <tr class="due-row">
+              <td><strong>Remaining Due</strong></td>
+              <td>
+                <span class="rs-prefix" style="color:hsl(0 84% 70%)">₹</span>
+                <input class="amount-input" type="number" id="remaining" placeholder="0" min="0" readonly style="cursor:default">
+              </td>
+            </tr>
+            <tr class="ad-row">
+              <td>Ad Budget <span style="font-size:11px">(Paid separately by client)</span></td>
+              <td>
+                <span class="rs-prefix">₹</span>
+                <input class="amount-input" type="number" id="ad-budget" placeholder="0" min="0" style="font-style:italic">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAYMENT METHOD -->
+      <div class="section-block">
+        <div class="section-head">
+          <div class="section-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          </div>
+          <span class="section-label">Payment Method</span>
+          <div class="section-line"></div>
+        </div>
+        <div class="pm-grid">
+          <label class="pm-pill" onclick="togglePill(this, event)"><input type="checkbox" value="UPI"> UPI</label>
+          <label class="pm-pill" onclick="togglePill(this, event)"><input type="checkbox" value="Bank Transfer"> Bank Transfer</label>
+          <label class="pm-pill" onclick="togglePill(this, event)"><input type="checkbox" value="Google Pay"> Google Pay</label>
+          <label class="pm-pill" onclick="togglePill(this, event)"><input type="checkbox" value="PhonePe"> PhonePe</label>
+          <label class="pm-pill" onclick="togglePill(this, event)"><input type="checkbox" value="Paytm"> Paytm</label>
+        </div>
+      </div>
+
+      <!-- T&C -->
+      <div class="section-block">
+        <div class="section-head">
+          <div class="section-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <span class="section-label">Terms &amp; Conditions</span>
+          <div class="section-line"></div>
+        </div>
+        <div class="tc-grid">
+          <div class="tc-item"><div class="tc-bullet"></div><span>50% advance required before starting the project</span></div>
+          <div class="tc-item"><div class="tc-bullet"></div><span>Remaining payment must be cleared within agreed timeline</span></div>
+          <div class="tc-item"><div class="tc-bullet"></div><span>Ad budget is not included in service charge</span></div>
+          <div class="tc-item"><div class="tc-bullet"></div><span>Results may vary based on market &amp; audience response</span></div>
+        </div>
+      </div>
+
+      <!-- SIGNATURE -->
+      <div class="section-block" style="margin-bottom:0">
+        <div class="sig-row">
+          <div style="font-size:12px;color:hsl(220 15% 60%);max-width:320px;line-height:1.6">
+            This invoice is system-generated by Nexora Digital.<br>
+            For queries: digitalnexora11@gmail.com
+          </div>
+          <div class="sig-box">
+            <div class="sig-line-el"></div>
+            <div class="sig-caption">Authorized Signature — Nexora Digital</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /inv-body -->
+
+    <!-- FOOTER -->
+    <div class="inv-footer">
+      <div class="footer-thanks">Thank you for your business!</div>
+      <div class="footer-note">Nexora Digital · digitalnexora11@gmail.com</div>
+    </div>
+
+  </div><!-- /invoice-card -->
+</div><!-- /main -->
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon">✓</span>
+  <span id="toast-msg">PDF downloaded successfully!</span>
+</div>
+
+<script>
+// ── Init ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date();
+  document.getElementById('inv-date').value = today.toISOString().split('T')[0];
+});
+
+// ── Toggle helpers ────────────────────────────────────
+function toggleSvc(el, event) {
+  event.preventDefault();
+  el.classList.toggle('checked');
+  el.querySelector('input').checked = el.classList.contains('checked');
+}
+function togglePill(el, event) {
+  event.preventDefault();
+  el.classList.toggle('checked');
+  el.querySelector('input').checked = el.classList.contains('checked');
+}
+
+// ── Auto-calc remaining ───────────────────────────────
+function calcDue() {
+  const svc = parseFloat(document.getElementById('svc-charge').value) || 0;
+  const adv = parseFloat(document.getElementById('advance').value) || 0;
+  const due = Math.max(0, svc - adv);
+  document.getElementById('remaining').value = due > 0 ? due : '';
+}
+
+// ── Clear form ────────────────────────────────────────
+function clearForm() {
+  document.getElementById('inv-no').value = 'ND-001';
+  document.getElementById('inv-date').value = new Date().toISOString().split('T')[0];
+  ['client-name','biz-name','client-phone','client-email','svc-charge','advance','remaining','ad-budget']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  document.querySelectorAll('.svc-label.checked').forEach(el => {
+    el.classList.remove('checked');
+    el.querySelector('input').checked = false;
+  });
+  document.querySelectorAll('.pm-pill.checked').forEach(el => {
+    el.classList.remove('checked');
+    el.querySelector('input').checked = false;
+  });
+  showToast('Form cleared — ready for new invoice.', '↺');
+}
+
+// ── Toast ─────────────────────────────────────────────
+function showToast(msg, icon) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.querySelector('.toast-icon').textContent = icon || '✓';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ── Format helpers ────────────────────────────────────
+function fmtDate(d) {
+  if (!d) return '__ / __ / 2026';
+  const [y, m, day] = d.split('-');
+  return `${day} / ${m} / ${y}`;
+}
+function fmtRsOrBlank(v) {
+  if (!v || isNaN(v)) return 'Rs. ________';
+  return 'Rs. ' + parseInt(v).toLocaleString('en-IN');
+}
+
+// ── PDF Generator ─────────────────────────────────────
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, H = 297;
+  const ML = 20, MR = 20;
+  const CW = W - ML - MR;
+  const R = W - MR;
+
+  const invNo     = document.getElementById('inv-no').value || 'ND-001';
+  const invDate   = fmtDate(document.getElementById('inv-date').value);
+  const cName     = document.getElementById('client-name').value.trim() || '—';
+  const bizName   = document.getElementById('biz-name').value.trim();
+  const cPhone    = document.getElementById('client-phone').value.trim();
+  const cEmail    = document.getElementById('client-email').value.trim();
+  const svcCharge = document.getElementById('svc-charge').value;
+  const advance   = document.getElementById('advance').value;
+  const remaining = document.getElementById('remaining').value;
+  const adBudget  = document.getElementById('ad-budget').value;
+
+  const svcs = [];
+  document.querySelectorAll('#services-grid input[type=checkbox]:checked').forEach(cb => svcs.push(cb.value));
+  const pms = [];
+  document.querySelectorAll('.pm-pill.checked input').forEach(cb => pms.push(cb.value));
+
+  const black  = () => doc.setTextColor(0, 0, 0);
+  const grey   = () => doc.setTextColor(100, 100, 100);
+  const ltgrey = () => doc.setTextColor(150, 150, 150);
+  const red    = () => doc.setTextColor(180, 0, 0);
+
+  function hline(yPos, lw = 0.3, r = 150) {
+    doc.setDrawColor(r, r, r);
+    doc.setLineWidth(lw);
+    doc.line(ML, yPos, R, yPos);
+  }
+
+  let y = 22;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(26); black();
+  doc.text('Nexora Digital', ML, y);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); ltgrey();
+  doc.text('From', R - 60, y - 6);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); black();
+  doc.text('Nexora Digital', R, y - 3, { align: 'right' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); grey();
+  doc.text('digitalnexora11@gmail.com', R, y + 3, { align: 'right' });
+  doc.text('+91 93302 52564  |  +91 96741 26372', R, y + 9, { align: 'right' });
+  doc.text('Digital Marketing & Tech Solutions', R, y + 15, { align: 'right' });
+
+  y += 32; hline(y, 0.4); y += 10;
+
+  const leftX = ML;
+  const rightX = ML + CW / 2 + 4;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); ltgrey();
+  doc.text('Invoice ID', leftX, y);
+  doc.text('Issue Date', leftX, y + 7);
+  doc.text('Invoice for', rightX, y);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); black();
+  doc.text(invNo, leftX + 30, y);
+  doc.text(invDate, leftX + 30, y + 7);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); black();
+  doc.text(cName, rightX + 28, y);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); grey();
+  let byOff = 7;
+  if (bizName) { doc.text(bizName, rightX + 28, y + byOff); byOff += 6; }
+  if (cPhone)  { doc.text(cPhone,  rightX + 28, y + byOff); byOff += 6; }
+  if (cEmail)  { doc.text(cEmail,  rightX + 28, y + byOff); byOff += 6; }
+
+  y += 22; hline(y, 0.4); y += 10;
+
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); ltgrey();
+  doc.text('Service', ML, y);
+  doc.text('Description', ML + 40, y);
+  hline(y + 2, 0.3, 200); y += 8;
+
+  if (svcs.length === 0) {
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(9); grey();
+    doc.text('No services selected', ML, y + 2); y += 8;
+  } else {
+    svcs.forEach((svc, i) => {
+      if (i % 2 === 1) {
+        doc.setFillColor(247, 247, 247);
+        doc.rect(ML - 2, y - 4, CW + 4, 8, 'F');
+      }
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); grey();
+      doc.text('Service', ML, y); black();
+      doc.text(svc, ML + 40, y); y += 8;
+    });
+  }
+  hline(y, 0.4); y += 10;
+
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); ltgrey();
+  doc.text('Description', ML, y);
+  doc.text('Amount', R, y, { align: 'right' });
+  hline(y + 2, 0.3, 200); y += 8;
+
+  const payRows = [
+    { label: 'Service Charge (15 Days)', val: fmtRsOrBlank(svcCharge), bold: false, italic: false, isRed: false },
+    { label: 'Advance Paid', val: fmtRsOrBlank(advance), bold: false, italic: false, isRed: false },
+    { label: 'Remaining Due', val: fmtRsOrBlank(remaining), bold: true, italic: false, isRed: true },
+    { label: 'Ad Budget (paid separately by client)', val: fmtRsOrBlank(adBudget), bold: false, italic: true, isRed: false },
+  ];
+  payRows.forEach((row, i) => {
+    if (i % 2 === 1) {
+      doc.setFillColor(247, 247, 247);
+      doc.rect(ML - 2, y - 4, CW + 4, 8, 'F');
+    }
+    doc.setFont('helvetica', row.bold ? 'bold' : (row.italic ? 'italic' : 'normal'));
+    doc.setFontSize(9.5);
+    if (row.isRed) red(); else black();
+    doc.text(row.label, ML, y);
+    doc.text(row.val, R, y, { align: 'right' });
+    y += 8;
+  });
+  hline(y, 0.4); y += 8;
+
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); grey();
+  doc.text('Subtotal', R - 50, y);
+  doc.text(fmtRsOrBlank(svcCharge), R, y, { align: 'right' }); y += 6;
+  doc.text('Advance Paid', R - 50, y);
+  doc.text(fmtRsOrBlank(advance), R, y, { align: 'right' }); y += 6;
+  hline(y, 0.3); y += 6;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); black();
+  doc.text('Amount Due', R - 50, y);
+  doc.text(fmtRsOrBlank(remaining || svcCharge), R, y, { align: 'right' }); y += 12;
+
+  hline(y, 0.4); y += 8;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); ltgrey();
+  doc.text('Payment Method', ML, y); y += 6;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); grey();
+  const pmText = pms.length > 0 ? pms.join('  |  ') : 'UPI  |  Bank Transfer  |  Google Pay  |  PhonePe  |  Paytm';
+  doc.text(pmText, ML, y); y += 10;
+
+  hline(y, 0.4); y += 8;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); ltgrey();
+  doc.text('Terms & Conditions', ML, y); y += 6;
+  const tcs = [
+    '• 50% advance required before starting the project',
+    '• Remaining payment must be cleared within agreed timeline',
+    '• Ad budget is not included in service charge',
+    '• Results may vary based on market & audience response',
+  ];
+  doc.setFontSize(8.5); grey();
+  tcs.forEach(tc => { doc.text(tc, ML, y); y += 6; });
+  y += 4;
+
+  hline(y, 0.4); y += 8;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); ltgrey();
+  doc.text('Notes', ML, y); y += 6;
+  doc.setFontSize(8.5); grey();
+  doc.text('Thank you for your business!', ML, y); y += 5;
+  doc.text('For queries: digitalnexora11@gmail.com  |  +91 93302 52564', ML, y);
+
+  const sigLineY = y - 2;
+  doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.4);
+  doc.line(R - 55, sigLineY, R, sigLineY);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); ltgrey();
+  doc.text('Authorized Signature', R - 27, sigLineY + 5, { align: 'center' });
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); black();
+  doc.text('Nexora Digital', R - 27, sigLineY + 11, { align: 'center' });
+
+  const fname = `Nexora_Invoice_${invNo.replace(/[^a-zA-Z0-9]/g,'_')}_${(cName !== '—' ? cName.split(' ')[0] : 'Client')}.pdf`;
+  doc.save(fname);
+  showToast(`Invoice saved as ${fname}`);
+}
+</script>
+</body>
+</html>
