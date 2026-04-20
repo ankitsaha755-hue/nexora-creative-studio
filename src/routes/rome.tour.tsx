@@ -254,7 +254,37 @@ function FPSController() {
   return <PointerLockControls />;
 }
 
-function Scene({ isNight, walkMode, onMonumentClick }: { isNight: boolean; walkMode: boolean; onMonumentClick: (m: Monument) => void }) {
+function CameraFlyer({ target, onArrive }: { target: [number, number, number] | null; onArrive: () => void }) {
+  const { camera } = useThree();
+  const targetPos = useRef<THREE.Vector3 | null>(null);
+  const lookAt = useRef<THREE.Vector3>(new THREE.Vector3());
+
+  useEffect(() => {
+    if (target) {
+      // Position camera offset from monument for a nice angle
+      targetPos.current = new THREE.Vector3(target[0] + 6, 6, target[2] + 6);
+      lookAt.current.set(target[0], 1.5, target[2]);
+    }
+  }, [target]);
+
+  useFrame(() => {
+    if (!targetPos.current) return;
+    camera.position.lerp(targetPos.current, 0.06);
+    const currentLook = new THREE.Vector3();
+    camera.getWorldDirection(currentLook);
+    const desired = lookAt.current.clone().sub(camera.position).normalize();
+    const blended = currentLook.lerp(desired, 0.08).add(camera.position);
+    camera.lookAt(blended);
+    if (camera.position.distanceTo(targetPos.current) < 0.3) {
+      targetPos.current = null;
+      onArrive();
+    }
+  });
+
+  return null;
+}
+
+function Scene({ isNight, walkMode, flyTarget, onFlyArrive, onMonumentClick }: { isNight: boolean; walkMode: boolean; flyTarget: [number, number, number] | null; onFlyArrive: () => void; onMonumentClick: (m: Monument) => void }) {
   return (
     <>
       {isNight ? (
@@ -301,15 +331,18 @@ function Scene({ isNight, walkMode, onMonumentClick }: { isNight: boolean; walkM
       {walkMode ? (
         <FPSController />
       ) : (
-        <OrbitControls
-          enablePan
-          enableZoom
-          maxPolarAngle={Math.PI / 2.1}
-          minDistance={6}
-          maxDistance={30}
-          autoRotate
-          autoRotateSpeed={0.3}
-        />
+        <>
+          <CameraFlyer target={flyTarget} onArrive={onFlyArrive} />
+          <OrbitControls
+            enablePan
+            enableZoom
+            maxPolarAngle={Math.PI / 2.1}
+            minDistance={6}
+            maxDistance={30}
+            autoRotate={!flyTarget}
+            autoRotateSpeed={0.3}
+          />
+        </>
       )}
     </>
   );
@@ -320,6 +353,11 @@ function RomeTourPage() {
   const [isNight, setIsNight] = useState(false);
   const [walkMode, setWalkMode] = useState(false);
   const [selected, setSelected] = useState<Monument | null>(null);
+  const [flyTarget, setFlyTarget] = useState<[number, number, number] | null>(null);
+
+  // Compute minimap bounds
+  const MAP_RANGE = 12;
+  const toMapPct = (v: number) => ((v + MAP_RANGE) / (MAP_RANGE * 2)) * 100;
 
   return (
     <div className={`relative w-screen h-screen overflow-hidden ${isNight ? "bg-[#0a0e22]" : "bg-[#cfb98f]"}`}>
@@ -353,7 +391,7 @@ function RomeTourPage() {
       {/* 3D Canvas */}
       <Canvas shadows camera={{ position: [14, 10, 14], fov: 50 }} dpr={[1, 2]}>
         <Suspense fallback={null}>
-          <Scene isNight={isNight} walkMode={walkMode} onMonumentClick={setSelected} />
+          <Scene isNight={isNight} walkMode={walkMode} flyTarget={flyTarget} onFlyArrive={() => setFlyTarget(null)} onMonumentClick={setSelected} />
         </Suspense>
       </Canvas>
 
@@ -368,6 +406,42 @@ function RomeTourPage() {
       {walkMode && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
           <div className="w-1 h-1 rounded-full bg-white/80 shadow-[0_0_8px_rgba(0,0,0,0.6)]" />
+        </div>
+      )}
+
+      {/* Minimap — bird's eye */}
+      {!walkMode && (
+        <div className="absolute top-24 right-6 z-20 w-56 h-56 bg-black/55 backdrop-blur-md border border-amber-200/30 rounded-xl p-3 shadow-2xl">
+          <div className="text-amber-100/80 text-[9px] tracking-[0.3em] uppercase mb-2 font-serif text-center">
+            Roma · Bird's Eye
+          </div>
+          <div className="relative w-full h-[calc(100%-1.25rem)] rounded-lg overflow-hidden border border-amber-200/15"
+               style={{
+                 background: "radial-gradient(circle at 50% 50%, #6b5638 0%, #4a3a25 70%, #2d2316 100%)",
+               }}>
+            {/* Compass N */}
+            <div className="absolute top-1 left-1/2 -translate-x-1/2 text-amber-100/70 text-[8px] font-serif">N</div>
+            {/* River line */}
+            <div className="absolute top-0 bottom-0 w-[3px] bg-blue-400/30" style={{ left: "20%", transform: "rotate(8deg)" }} />
+            {MONUMENTS.map((m) => {
+              const left = toMapPct(m.position[0]);
+              const top = toMapPct(m.position[2]);
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => { setFlyTarget(m.position); setSelected(m); }}
+                  className="absolute group -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: `${left}%`, top: `${top}%` }}
+                  aria-label={`Fly to ${m.name}`}
+                >
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-300 border border-amber-100 shadow-[0_0_8px_rgba(255,200,100,0.8)] group-hover:scale-150 group-hover:bg-amber-200 transition-transform" />
+                  <div className="absolute left-1/2 -translate-x-1/2 top-3 text-[8px] tracking-wider text-amber-100/0 group-hover:text-amber-100 whitespace-nowrap bg-black/70 px-1.5 py-0.5 rounded transition-opacity pointer-events-none">
+                    {m.name}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
