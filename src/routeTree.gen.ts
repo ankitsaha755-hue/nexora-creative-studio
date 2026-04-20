@@ -9,18 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RomeRouteImport } from './routes/rome'
 import { Route as GalaxyRouteImport } from './routes/galaxy'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RomeIndexRouteImport } from './routes/rome.index'
 import { Route as RomeTourRouteImport } from './routes/rome.tour'
 
-const RomeRoute = RomeRouteImport.update({
-  id: '/rome',
-  path: '/rome',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const GalaxyRoute = GalaxyRouteImport.update({
   id: '/galaxy',
   path: '/galaxy',
@@ -41,6 +36,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RomeIndexRoute = RomeIndexRouteImport.update({
+  id: '/rome/',
+  path: '/rome/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RomeTourRoute = RomeTourRouteImport.update({
   id: '/tour',
   path: '/tour',
@@ -52,16 +52,16 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/galaxy': typeof GalaxyRoute
-  '/rome': typeof RomeRouteWithChildren
   '/rome/tour': typeof RomeTourRoute
+  '/rome/': typeof RomeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/galaxy': typeof GalaxyRoute
-  '/rome': typeof RomeRouteWithChildren
   '/rome/tour': typeof RomeTourRoute
+  '/rome': typeof RomeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,15 +69,22 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/galaxy': typeof GalaxyRoute
-  '/rome': typeof RomeRouteWithChildren
   '/rome/tour': typeof RomeTourRoute
+  '/rome/': typeof RomeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/auth' | '/galaxy' | '/rome' | '/rome/tour'
+  fullPaths: '/' | '/admin' | '/auth' | '/galaxy' | '/rome/tour' | '/rome/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/auth' | '/galaxy' | '/rome' | '/rome/tour'
-  id: '__root__' | '/' | '/admin' | '/auth' | '/galaxy' | '/rome' | '/rome/tour'
+  to: '/' | '/admin' | '/auth' | '/galaxy' | '/rome/tour' | '/rome'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/galaxy'
+    | '/rome/tour'
+    | '/rome/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -85,18 +92,11 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   GalaxyRoute: typeof GalaxyRoute
-  RomeRoute: typeof RomeRouteWithChildren
+  RomeIndexRoute: typeof RomeIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/rome': {
-      id: '/rome'
-      path: '/rome'
-      fullPath: '/rome'
-      preLoaderRoute: typeof RomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/galaxy': {
       id: '/galaxy'
       path: '/galaxy'
@@ -125,6 +125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rome/': {
+      id: '/rome/'
+      path: '/rome'
+      fullPath: '/rome/'
+      preLoaderRoute: typeof RomeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rome/tour': {
       id: '/rome/tour'
       path: '/tour'
@@ -135,22 +142,12 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface RomeRouteChildren {
-  RomeTourRoute: typeof RomeTourRoute
-}
-
-const RomeRouteChildren: RomeRouteChildren = {
-  RomeTourRoute: RomeTourRoute,
-}
-
-const RomeRouteWithChildren = RomeRoute._addFileChildren(RomeRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   GalaxyRoute: GalaxyRoute,
-  RomeRoute: RomeRouteWithChildren,
+  RomeIndexRoute: RomeIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/rome")({
+export const Route = createFileRoute("/rome/")({
   head: () => ({
     meta: [
       { title: "Ancient Rome Reconstructed — A 3D Walk Through Rome at Its Peak" },
