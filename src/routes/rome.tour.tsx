@@ -390,8 +390,10 @@ function RomeTourPage() {
   const [walkMode, setWalkMode] = useState(false);
   const [selected, setSelected] = useState<Monument | null>(null);
   const [flyTarget, setFlyTarget] = useState<[number, number, number] | null>(null);
+  const [year, setYear] = useState(100); // 100 AD default
 
-  // Compute minimap bounds
+  const yearLabel = year < 0 ? `${Math.abs(year)} BC` : `${year} AD`;
+
   const MAP_RANGE = 12;
   const toMapPct = (v: number) => ((v + MAP_RANGE) / (MAP_RANGE * 2)) * 100;
 
@@ -406,7 +408,7 @@ function RomeTourPage() {
           ← Intro
         </Link>
         <div className="text-amber-100 text-xs md:text-sm tracking-[0.4em] uppercase font-serif">
-          Roma Aeterna · 100 AD
+          Roma Aeterna · {yearLabel}
         </div>
         <div className="flex gap-2">
           <button
@@ -427,12 +429,31 @@ function RomeTourPage() {
       {/* 3D Canvas */}
       <Canvas shadows camera={{ position: [14, 10, 14], fov: 50 }} dpr={[1, 2]}>
         <Suspense fallback={null}>
-          <Scene isNight={isNight} walkMode={walkMode} flyTarget={flyTarget} onFlyArrive={() => setFlyTarget(null)} onMonumentClick={setSelected} />
+          <Scene isNight={isNight} walkMode={walkMode} year={year} flyTarget={flyTarget} onFlyArrive={() => setFlyTarget(null)} onMonumentClick={setSelected} />
         </Suspense>
       </Canvas>
 
+      {/* Time-travel slider */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 w-[min(640px,90vw)] bg-black/55 backdrop-blur-md border border-amber-200/30 rounded-2xl px-5 py-3 shadow-2xl">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-amber-100/70 text-[10px] tracking-[0.3em] uppercase font-serif">500 BC</span>
+          <span className="text-amber-100 text-sm tracking-[0.25em] font-serif">⏳ {yearLabel}</span>
+          <span className="text-amber-100/70 text-[10px] tracking-[0.3em] uppercase font-serif">476 AD</span>
+        </div>
+        <input
+          type="range"
+          min={-500}
+          max={476}
+          step={1}
+          value={year}
+          onChange={(e) => setYear(Number(e.target.value))}
+          className="w-full accent-amber-300 cursor-pointer"
+          aria-label="Time travel slider"
+        />
+      </div>
+
       {/* Hint */}
-      <div className="absolute bottom-6 left-6 z-10 text-white/80 text-[11px] tracking-[0.25em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 max-w-xs">
+      <div className="absolute bottom-24 left-6 z-10 text-white/80 text-[11px] tracking-[0.25em] uppercase bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 max-w-xs">
         {walkMode
           ? "Click to lock cursor · WASD to walk · Shift to run · Mouse to look · ESC to exit"
           : "Drag to rotate · Scroll to zoom · Click monuments"}
