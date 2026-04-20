@@ -33,7 +33,7 @@ const MONUMENTS: Monument[] = [
     id: "colosseum",
     name: "The Colosseum",
     position: [8, 0, -4],
-    story: "Inaugurated 80 AD by Emperor Titus. 50,000 spectators roared as gladiators fought beneath the Roman sun.",
+    story: "On this spot in 80 AD, Emperor Titus inaugurated the Flavian Amphitheatre with 100 days of games. 9,000 wild beasts were slaughtered and the arena was flooded for mock naval battles. 50,000 Romans roared as gladiators rose from the hypogeum below.",
     color: "#d6c2a4",
     built: 80,
     fell: 600,
@@ -42,7 +42,7 @@ const MONUMENTS: Monument[] = [
     id: "forum",
     name: "Roman Forum",
     position: [0, 0, 0],
-    story: "The beating heart of the Republic. On this spot in 44 BC, Julius Caesar was assassinated at the foot of Pompey's statue.",
+    story: "On this spot, on the Ides of March 44 BC, Julius Caesar was stabbed 23 times at the foot of Pompey's statue. His last words — 'Et tu, Brute?' — ended the Republic. Mark Antony delivered his funeral oration here days later, igniting civil war.",
     color: "#e8d8b8",
     built: -500,
     fell: 500,
@@ -51,7 +51,7 @@ const MONUMENTS: Monument[] = [
     id: "palatine",
     name: "Palatine Hill",
     position: [-8, 0, 2],
-    story: "Where Romulus founded Rome in 753 BC. Later home to emperors — the word 'palace' comes from this hill.",
+    story: "On this hill in 753 BC, Romulus killed his brother Remus and founded Rome. Eight centuries later, Augustus built his modest house here. The word 'palace' itself comes from Palatium — every emperor that followed lived on this very ground.",
     color: "#c9b48a",
     built: -500,
     fell: 550,
@@ -60,7 +60,7 @@ const MONUMENTS: Monument[] = [
     id: "pantheon",
     name: "The Pantheon",
     position: [-4, 0, -7],
-    story: "Rebuilt by Hadrian around 126 AD. Its concrete dome remains the world's largest unreinforced dome — 1,900 years on.",
+    story: "On this spot in 126 AD, Emperor Hadrian dedicated a temple to all gods. Through its 9-metre oculus, sunlight strikes a different point each hour — a Roman sundial in concrete. 1,900 years on, the dome remains the largest unreinforced concrete dome ever built.",
     color: "#cfb98f",
     built: 126,
     fell: 600,
@@ -69,7 +69,7 @@ const MONUMENTS: Monument[] = [
     id: "circus",
     name: "Circus Maximus",
     position: [5, 0, 6],
-    story: "250,000 Romans packed in to bet on chariot races. The track stretched longer than five football fields.",
+    story: "On this track, 250,000 Romans bet fortunes on chariot races. The charioteer Diocles raced 4,257 times and won the equivalent of 15 billion dollars. A single crash on the spina could trample twelve horses and four men in seconds.",
     color: "#b89a72",
     built: -329,
     fell: 549,
@@ -362,11 +362,21 @@ function Scene({ isNight, walkMode, year, flyTarget, onFlyArrive, onMonumentClic
         </>
       )}
 
-      {!walkMode && MONUMENTS.map((m) => (
-        <Html key={m.id} position={[m.position[0], 4.2, m.position[2]]} center distanceFactor={14}>
-          <div className="px-2 py-0.5 rounded bg-black/60 text-amber-100 text-[10px] tracking-[0.2em] uppercase whitespace-nowrap pointer-events-none border border-amber-200/20">
-            {m.name}
-          </div>
+      {MONUMENTS.map((m) => (
+        <Html key={m.id} position={[m.position[0], 4.6, m.position[2]]} center distanceFactor={12} zIndexRange={[10, 0]}>
+          <button
+            onClick={(e) => { e.stopPropagation(); onMonumentClick(m); }}
+            className="group relative flex flex-col items-center gap-1 cursor-pointer pointer-events-auto"
+            aria-label={`Read story: ${m.name}`}
+          >
+            <span className="px-2 py-0.5 rounded bg-black/70 text-amber-100 text-[10px] tracking-[0.25em] uppercase whitespace-nowrap border border-amber-200/30 group-hover:bg-amber-100 group-hover:text-black transition-colors font-serif">
+              {m.name}
+            </span>
+            <span className="relative flex h-5 w-5 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-60 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-200 border border-amber-50 shadow-[0_0_10px_rgba(255,200,100,0.9)] items-center justify-center text-[8px] text-amber-900 font-bold">i</span>
+            </span>
+          </button>
         </Html>
       ))}
 
