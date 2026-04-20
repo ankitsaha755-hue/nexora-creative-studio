@@ -202,7 +202,59 @@ function FlickeringTorch({ position }: { position: [number, number, number] }) {
   );
 }
 
-function Scene({ isNight, onMonumentClick }: { isNight: boolean; onMonumentClick: (m: Monument) => void }) {
+function FPSController() {
+  const { camera } = useThree();
+  const keys = useRef({ w: false, a: false, s: false, d: false, shift: false });
+  const velocity = useRef(new THREE.Vector3());
+  const direction = useRef(new THREE.Vector3());
+
+  useEffect(() => {
+    camera.position.set(0, 1.7, 6);
+    const down = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if (k === "w" || k === "a" || k === "s" || k === "d") (keys.current as any)[k] = true;
+      if (e.key === "Shift") keys.current.shift = true;
+    };
+    const up = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if (k === "w" || k === "a" || k === "s" || k === "d") (keys.current as any)[k] = false;
+      if (e.key === "Shift") keys.current.shift = false;
+    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, [camera]);
+
+  useFrame((_, delta) => {
+    const speed = (keys.current.shift ? 12 : 5) * delta;
+    direction.current.set(0, 0, 0);
+    if (keys.current.w) direction.current.z -= 1;
+    if (keys.current.s) direction.current.z += 1;
+    if (keys.current.a) direction.current.x -= 1;
+    if (keys.current.d) direction.current.x += 1;
+    direction.current.normalize();
+
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    forward.y = 0;
+    forward.normalize();
+    const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+
+    velocity.current.set(0, 0, 0);
+    velocity.current.addScaledVector(forward, -direction.current.z * speed);
+    velocity.current.addScaledVector(right, direction.current.x * speed);
+
+    camera.position.add(velocity.current);
+    camera.position.y = 1.7;
+  });
+
+  return <PointerLockControls />;
+}
+
+function Scene({ isNight, walkMode, onMonumentClick }: { isNight: boolean; walkMode: boolean; onMonumentClick: (m: Monument) => void }) {
   return (
     <>
       {isNight ? (
@@ -238,8 +290,7 @@ function Scene({ isNight, onMonumentClick }: { isNight: boolean; onMonumentClick
         </>
       )}
 
-      {/* Floating labels */}
-      {MONUMENTS.map((m) => (
+      {!walkMode && MONUMENTS.map((m) => (
         <Html key={m.id} position={[m.position[0], 4.2, m.position[2]]} center distanceFactor={14}>
           <div className="px-2 py-0.5 rounded bg-black/60 text-amber-100 text-[10px] tracking-[0.2em] uppercase whitespace-nowrap pointer-events-none border border-amber-200/20">
             {m.name}
@@ -247,15 +298,19 @@ function Scene({ isNight, onMonumentClick }: { isNight: boolean; onMonumentClick
         </Html>
       ))}
 
-      <OrbitControls
-        enablePan
-        enableZoom
-        maxPolarAngle={Math.PI / 2.1}
-        minDistance={6}
-        maxDistance={30}
-        autoRotate
-        autoRotateSpeed={0.3}
-      />
+      {walkMode ? (
+        <FPSController />
+      ) : (
+        <OrbitControls
+          enablePan
+          enableZoom
+          maxPolarAngle={Math.PI / 2.1}
+          minDistance={6}
+          maxDistance={30}
+          autoRotate
+          autoRotateSpeed={0.3}
+        />
+      )}
     </>
   );
 }
