@@ -52,9 +52,15 @@ const Portfolio = () => {
             );
 
             return "href" in p && p.href ? (
-              <Link key={p.title} to={p.href} className="block">
-                {inner}
-              </Link>
+              "external" in p && p.external ? (
+                <a key={p.title} href={p.href} download className="block">
+                  {inner}
+                </a>
+              ) : (
+                <Link key={p.title} to={p.href} className="block">
+                  {inner}
+                </Link>
+              )
             ) : (
               <div key={p.title}>{inner}</div>
             );
