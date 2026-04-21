@@ -45,6 +45,19 @@ function AdminPage() {
         navigate({ to: "/auth", replace: true });
         return;
       }
+
+      const ALLOWED_ADMIN_EMAILS = [
+        "digitalnexora11@gmail.com",
+        "ankitsaha755@gmail.com",
+        "jiyamallick889@gmail.com",
+      ];
+      const userEmail = session.user.email?.toLowerCase() ?? "";
+      if (!ALLOWED_ADMIN_EMAILS.includes(userEmail)) {
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
       const { data: roleRow } = await supabase
         .from("user_roles")
         .select("role")
