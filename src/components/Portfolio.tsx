@@ -5,7 +5,7 @@ import aiRobot from "@/assets/ai-robot.png";
 const projects = [
   { tag: "Web", title: "Cosmic Voyage", desc: "Interactive 3D solar system & galaxy explorer.", color: "from-cyan-500/30 to-blue-600/30", href: "/galaxy" },
   { tag: "Web", title: "Ancient Rome Reconstructed", desc: "Walk through a 3D model of Rome at its peak — the Forum, Colosseum & more.", color: "from-amber-500/30 to-orange-700/30", href: "/rome" },
-  { tag: "Deck", title: "Aurora Pitch", desc: "Series-A deck that helped raise $4.2M in funding.", color: "from-fuchsia-500/30 to-rose-600/30" },
+  { tag: "PowerPoint Design", title: "The $10 Trillion Problem", desc: "A deep dive into the global cost of cybercrime and actionable steps businesses can take right now.", color: "from-fuchsia-500/30 to-rose-600/30", href: "/dollar10-Trillion.pptx", external: true },
   { tag: "Data", title: "Retail Insights Engine", desc: "Pipeline processing 12M records daily.", color: "from-cyan-400/30 to-violet-600/30" },
 ];
 
