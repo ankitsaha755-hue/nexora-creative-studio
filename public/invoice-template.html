@@ -832,8 +832,7 @@
             For queries: digitalnexora11@gmail.com
           </div>
           <div class="sig-box">
-            <img src="/signature.jpeg" alt="Authorized Signature" style="display:block; height:64px; width:auto; margin:0 auto 4px; object-fit:contain; mix-blend-mode:screen; filter:brightness(1.4) contrast(1.2);" />
-            <div class="sig-line-el"></div>
+            <img src="/signature.png" alt="Authorized Signature" style="display:block; height:72px; width:auto; margin:0 auto 4px; object-fit:contain; mix-blend-mode:screen; filter:brightness(1.6) contrast(1.4) invert(0.05);" />
             <div class="sig-caption">Authorized Signature — Nexora Digital</div>
           </div>
         </div>
@@ -921,7 +920,20 @@ function fmtRsOrBlank(v) {
 }
 
 // ── PDF Generator ─────────────────────────────────────
-function generatePDF() {
+async function loadSignatureDataURL() {
+  try {
+    const res = await fetch('/signature.png');
+    const blob = await res.blob();
+    return await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  } catch (e) { return null; }
+}
+
+async function generatePDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const W = 210, H = 297;
@@ -1073,6 +1085,13 @@ function generatePDF() {
   doc.text('For queries: digitalnexora11@gmail.com  |  +91 93302 52564', ML, y);
 
   const sigLineY = y - 2;
+  const sigImg = await loadSignatureDataURL();
+  if (sigImg) {
+    try {
+      const sigW = 35, sigH = 18;
+      doc.addImage(sigImg, 'PNG', R - 27 - sigW / 2, sigLineY - sigH - 1, sigW, sigH);
+    } catch (e) { /* ignore */ }
+  }
   doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.4);
   doc.line(R - 55, sigLineY, R, sigLineY);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8); ltgrey();
