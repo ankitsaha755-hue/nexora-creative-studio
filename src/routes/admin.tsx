@@ -174,20 +174,6 @@ function AdminPage() {
 
         {tab === "invoice" && (
           <div className="space-y-4">
-            <div className="glass rounded-2xl p-5 flex items-center justify-between flex-wrap gap-3">
-              <div>
-                <h2 className="font-display text-lg font-semibold mb-1">Nexora Invoice Generator</h2>
-                <p className="text-sm text-muted-foreground">Fill in client &amp; service details, then download a polished PDF invoice.</p>
-              </div>
-              <a
-                href="/invoice-template.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-hero text-sm"
-              >
-                <ExternalLink className="w-4 h-4" /> Open in new tab
-              </a>
-            </div>
             <div className="glass rounded-2xl overflow-hidden border border-border">
               <iframe
                 src="/invoice-template.html"
