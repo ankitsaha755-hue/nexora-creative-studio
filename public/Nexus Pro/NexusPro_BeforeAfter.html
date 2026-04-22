@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Before vs After — NexusPro Excel</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #050510;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .top-tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #ffd700;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: -1px;
+  }
+  h1 span { color: #ffd700; }
+  .subtitle { font-size: 15px; color: #666; text-align: center; margin-bottom: 56px; }
+
+  .container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 24px;
+    align-items: start;
+    width: 100%;
+    max-width: 1060px;
+  }
+
+  /* ─── BEFORE ─── */
+  .panel { border-radius: 16px; overflow: hidden; }
+
+  .before-panel { border: 1px solid #3a1a1a; }
+  .after-panel  { border: 1px solid #1a3a2a; }
+
+  .panel-header {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .before-panel .panel-header { background: #1e0808; color: #ff6666; }
+  .after-panel  .panel-header { background: #071e0f; color: #00e676; }
+
+  /* Boring Excel simulation */
+  .excel-boring {
+    background: #fff;
+    font-family: 'Calibri', 'DM Sans', sans-serif;
+  }
+
+  .excel-ribbon {
+    background: #217346;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 20px;
+  }
+  .ribbon-tab {
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+  }
+  .ribbon-tab.active { color: #fff; font-weight: 600; border-bottom: 2px solid #fff; padding-bottom: 2px; }
+
+  .excel-formula-bar {
+    background: #f0f0f0;
+    border-bottom: 1px solid #ccc;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+    font-size: 11px;
+    color: #555;
+  }
+  .cell-ref {
+    width: 52px;
+    background: #fff;
+    border: 1px solid #bbb;
+    text-align: center;
+    padding: 2px 4px;
+    font-size: 10px;
+  }
+  .fx { color: #217346; font-weight: 700; font-size: 13px; }
+  .formula-text { flex: 1; }
+
+  .excel-grid { overflow: hidden; }
+  .col-headers {
+    display: flex;
+    background: #f0f0f0;
+    border-bottom: 1px solid #bbb;
+  }
+  .col-h {
+    border-right: 1px solid #bbb;
+    text-align: center;
+    font-size: 11px;
+    color: #555;
+    padding: 3px 0;
+    flex-shrink: 0;
+  }
+
+  .grid-row {
+    display: flex;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .row-num {
+    background: #f0f0f0;
+    border-right: 1px solid #bbb;
+    font-size: 11px;
+    color: #555;
+    text-align: center;
+    padding: 4px 6px;
+    min-width: 28px;
+    flex-shrink: 0;
+  }
+  .grid-cell {
+    border-right: 1px solid #e8e8e8;
+    font-size: 11px;
+    color: #000;
+    padding: 4px 6px;
+    flex-shrink: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .grid-cell.hdr { background: #d5e8d4; font-weight: bold; color: #1a3a1a; }
+  .grid-cell.bold { font-weight: bold; }
+  .grid-cell.total { background: #fff2cc; font-weight: bold; }
+  .grid-cell.blue { color: #00008b; }
+  .grid-cell.red-txt { color: #c00000; font-weight: bold; }
+
+  .excel-status {
+    background: #217346;
+    color: rgba(255,255,255,0.8);
+    font-size: 10px;
+    padding: 3px 12px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .boring-annotation {
+    background: #fff9e6;
+    border-top: 1px solid #e0d060;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: #996600;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .anno-item::before { content: "✗  "; color: #cc3300; font-weight: bold; }
+
+  /* ─── AFTER / PREMIUM ─── */
+  .premium-content {
+    background: #0d0d1a;
+    padding: 20px;
+  }
+
+  .prem-topbar {
+    background: #16213e;
+    border-radius: 10px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .prem-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    color: #ffd700;
+  }
+  .prem-date { font-size: 10px; color: #666; }
+
+  .prem-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .prem-kpi {
+    border-radius: 10px;
+    padding: 12px;
+    background: #1a1a2e;
+    border: 1px solid #1e1e3a;
+  }
+  .prem-kpi-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .prem-kpi-val { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: #fff; }
+  .prem-kpi-chg { font-size: 10px; font-weight: 600; margin-top: 3px; }
+
+  .prem-charts {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .prem-chart {
+    background: #1a1a2e;
+    border-radius: 10px;
+    border: 1px solid #1e1e3a;
+    padding: 14px;
+  }
+  .prem-chart-title { font-size: 9px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+  .bar-group { display: flex; align-items: flex-end; gap: 4px; height: 70px; }
+  .pbar {
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    transition: opacity 0.2s;
+    min-width: 8px;
+  }
+
+  .prem-table {
+    background: #1a1a2e;
+    border-radius: 10px;
+    border: 1px solid #1e1e3a;
+    overflow: hidden;
+  }
+  .prem-table-head {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 0.8fr;
+    padding: 8px 14px;
+    background: #16213e;
+    font-size: 9px;
+    font-weight: 700;
+    color: #ffd700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .prem-table-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 0.8fr;
+    padding: 7px 14px;
+    font-size: 10px;
+    color: #bbb;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+  .prem-table-row:nth-child(even) { background: rgba(15,52,96,0.3); }
+  .green-txt { color: #00e676; font-weight: 600; }
+  .gold-txt  { color: #ffd700; font-weight: 600; }
+
+  .premium-annotation {
+    background: #071e0f;
+    border-top: 1px solid #1a3a2a;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: #00aa55;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .anno-item-good::before { content: "✓  "; color: #00e676; font-weight: bold; }
+
+  /* ─── VS DIVIDER ─── */
+  .vs-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding-top: 70px;
+  }
+  .vs-badge {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: #000;
+    box-shadow: 0 0 40px rgba(255,215,0,0.5), 0 0 80px rgba(255,215,0,0.2);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .vs-line {
+    width: 2px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, rgba(255,215,0,0.3), transparent);
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(255,215,0,0.5); }
+    50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(255,215,0,0.7); }
+  }
+
+  .footer-note {
+    margin-top: 48px;
+    font-size: 12px;
+    color: #333;
+    text-align: center;
+  }
+  .footer-note span { color: #ffd700; font-weight: 600; }
+
+  @media (max-width: 820px) {
+    .container { grid-template-columns: 1fr; }
+    .vs-col { flex-direction: row; padding-top: 0; }
+    .vs-line { width: 60px; height: 2px; }
+    .prem-kpis { grid-template-columns: repeat(2, 1fr); }
+    .prem-charts { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-tag">Portfolio Comparison</div>
+<h1>Normal Excel <span>vs</span> NexusPro</h1>
+<p class="subtitle">See exactly what your clients get — before and after upgrading to premium</p>
+
+<div class="container">
+
+  <!-- ─── BEFORE ─────────────────────────────────────── -->
+  <div class="panel before-panel">
+    <div class="panel-header">😐 Before — Typical Excel Sheet</div>
+
+    <!-- Excel-look simulation -->
+    <div class="excel-boring">
+      <div class="excel-ribbon">
+        <span class="ribbon-tab active">Home</span>
+        <span class="ribbon-tab">Insert</span>
+        <span class="ribbon-tab">Formulas</span>
+        <span class="ribbon-tab">Data</span>
+        <span class="ribbon-tab">View</span>
+      </div>
+      <div class="excel-formula-bar">
+        <span class="cell-ref">B14</span>
+        <span class="fx">fx</span>
+        <span class="formula-text">=SUM(B2:B13)</span>
+      </div>
+      <div class="excel-grid">
+        <div class="col-headers">
+          <div class="col-h" style="min-width:28px; background:#f0f0f0; border-right:1px solid #bbb;">&nbsp;</div>
+          <div class="col-h" style="width:72px;">A</div>
+          <div class="col-h" style="width:80px;">B</div>
+          <div class="col-h" style="width:80px;">C</div>
+          <div class="col-h" style="width:80px;">D</div>
+          <div class="col-h" style="width:72px;">E</div>
+        </div>
+        <!-- Row 1: headers -->
+        <div class="grid-row">
+          <div class="row-num">1</div>
+          <div class="grid-cell hdr" style="width:72px">Month</div>
+          <div class="grid-cell hdr" style="width:80px">Revenue</div>
+          <div class="grid-cell hdr" style="width:80px">Units</div>
+          <div class="grid-cell hdr" style="width:80px">Profit</div>
+          <div class="grid-cell hdr" style="width:72px">Growth</div>
+        </div>
+        <div class="grid-row">
+          <div class="row-num">2</div>
+          <div class="grid-cell" style="width:72px">Jan</div>
+          <div class="grid-cell blue" style="width:80px">185000</div>
+          <div class="grid-cell blue" style="width:80px">920</div>
+          <div class="grid-cell blue" style="width:80px">41000</div>
+          <div class="grid-cell" style="width:72px"></div>
+        </div>
+        <div class="grid-row">
+          <div class="row-num">3</div>
+          <div class="grid-cell" style="width:72px">Feb</div>
+          <div class="grid-cell blue" style="width:80px">195000</div>
+          <div class="grid-cell blue" style="width:80px">980</div>
+          <div class="grid-cell blue" style="width:80px">43500</div>
+          <div class="grid-cell blue" style="width:72px">0.054</div>
+        </div>
+        <div class="grid-row">
+          <div class="row-num">4</div>
+          <div class="grid-cell" style="width:72px">Mar</div>
+          <div class="grid-cell blue" style="width:80px">210000</div>
+          <div class="grid-cell blue" style="width:80px">1050</div>
+          <div class="grid-cell blue" style="width:80px">47000</div>
+          <div class="grid-cell blue" style="width:72px">0.077</div>
+        </div>
+        <div class="grid-row">
+          <div class="row-num">5</div>
+          <div class="grid-cell" style="width:72px">Apr</div>
+          <div class="grid-cell blue" style="width:80px">225000</div>
+          <div class="grid-cell blue" style="width:80px">1120</div>
+          <div class="grid-cell blue" style="width:80px">50000</div>
+          <div class="grid-cell blue" style="width:72px">0.071</div>
+        </div>
+        <div class="grid-row">
+          <div class="row-num">6</div>
+          <div class="grid-cell" style="width:72px">May</div>
+          <div class="grid-cell blue" style="width:80px">240000</div>
+          <div class="grid-cell blue" style="width:80px">1180</div>
+          <div class="grid-cell blue" style="width:80px">53000</div>
+          <div class="grid-cell blue" style="width:72px">0.067</div>
+        </div>
+        <div class="grid-row" style="background:#f9f9f9;">
+          <div class="row-num">7</div>
+          <div class="grid-cell" style="width:72px; color:#888; font-style:italic; font-size:10px">...</div>
+          <div class="grid-cell" style="width:80px; color:#ccc;">…</div>
+          <div class="grid-cell" style="width:80px; color:#ccc;">…</div>
+          <div class="grid-cell" style="width:80px; color:#ccc;">…</div>
+          <div class="grid-cell" style="width:72px; color:#ccc;">…</div>
+        </div>
+        <div class="grid-row">
+          <div class="row-num">14</div>
+          <div class="grid-cell bold" style="width:72px">TOTAL</div>
+          <div class="grid-cell total" style="width:80px">=SUM(B2:B13)</div>
+          <div class="grid-cell total" style="width:80px">=SUM(C2:C13)</div>
+          <div class="grid-cell total" style="width:80px">=SUM(D2:D13)</div>
+          <div class="grid-cell" style="width:72px"></div>
+        </div>
+      </div>
+      <div class="excel-status">
+        <span>Sheet1</span>
+        <span>Ready</span>
+        <span>Average: 210000 &nbsp; Count: 5 &nbsp; Sum: 1055000</span>
+      </div>
+    </div>
+
+    <div class="boring-annotation">
+      <div class="anno-item">Plain white background, default gridlines</div>
+      <div class="anno-item">No charts, no visual insights at all</div>
+      <div class="anno-item">Raw numbers — hard to read at a glance</div>
+      <div class="anno-item">No branding, no KPI cards, no colour coding</div>
+      <div class="anno-item">Looks amateur — clients won't trust it</div>
+    </div>
+  </div>
+
+  <!-- ─── VS ─────────────────────────────────────────── -->
+  <div class="vs-col">
+    <div class="vs-line"></div>
+    <div class="vs-badge">VS</div>
+    <div class="vs-line"></div>
+  </div>
+
+  <!-- ─── AFTER ─────────────────────────────────────── -->
+  <div class="panel after-panel">
+    <div class="panel-header">🚀 After — NexusPro Premium</div>
+    <div class="premium-content">
+
+      <div class="prem-topbar">
+        <div class="prem-title">⚡ NEXUS PRO — SALES DASHBOARD</div>
+        <div class="prem-date">FY 2024 &nbsp;|&nbsp; Live Analytics</div>
+      </div>
+
+      <div class="prem-kpis">
+        <div class="prem-kpi">
+          <div class="prem-kpi-lbl" style="color:#ffd700">💰 Revenue</div>
+          <div class="prem-kpi-val">$2.85M</div>
+          <div class="prem-kpi-chg" style="color:#00e676">▲ 18.4%</div>
+        </div>
+        <div class="prem-kpi">
+          <div class="prem-kpi-lbl" style="color:#00e676">📈 Profit</div>
+          <div class="prem-kpi-val">$641K</div>
+          <div class="prem-kpi-chg" style="color:#00e676">▲ 12.1%</div>
+        </div>
+        <div class="prem-kpi">
+          <div class="prem-kpi-lbl" style="color:#00d4ff">👥 Clients</div>
+          <div class="prem-kpi-val">847</div>
+          <div class="prem-kpi-chg" style="color:#00e676">▲ 9.3%</div>
+        </div>
+        <div class="prem-kpi">
+          <div class="prem-kpi-lbl" style="color:#7c4dff">📦 Units</div>
+          <div class="prem-kpi-val">14.2K</div>
+          <div class="prem-kpi-chg" style="color:#00e676">▲ 22.7%</div>
+        </div>
+      </div>
+
+      <div class="prem-charts">
+        <div class="prem-chart">
+          <div class="prem-chart-title">Monthly Revenue — FY 2024</div>
+          <div class="bar-group" id="premBars"></div>
+        </div>
+        <div class="prem-chart" style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
+          <div class="prem-chart-title" style="text-align:center;">By Quarter</div>
+          <svg width="90" height="90" viewBox="0 0 36 36" id="premPie"></svg>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:8px;">
+            <span style="font-size:9px; color:#ffd700">■ Q1</span>
+            <span style="font-size:9px; color:#00d4ff">■ Q2</span>
+            <span style="font-size:9px; color:#00e676">■ Q3</span>
+            <span style="font-size:9px; color:#7c4dff">■ Q4</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="prem-table">
+        <div class="prem-table-head">
+          <span>Month</span><span>Revenue</span><span>Units</span><span>Profit</span><span>Conv%</span>
+        </div>
+        <div class="prem-table-row"><span class="gold-txt">Oct</span><span>$290,000</span><span>1,440</span><span class="green-txt">$65K</span><span class="green-txt">38%</span></div>
+        <div class="prem-table-row"><span class="gold-txt">Nov</span><span>$295,000</span><span>1,470</span><span class="green-txt">$66K</span><span class="green-txt">39%</span></div>
+        <div class="prem-table-row"><span class="gold-txt">Dec</span><span>$337,500</span><span>1,840</span><span class="green-txt">$88K</span><span class="green-txt">41%</span></div>
+      </div>
+    </div>
+
+    <div class="premium-annotation">
+      <div class="anno-item-good">Dark luxury UI — zero gridlines visible</div>
+      <div class="anno-item-good">KPI cards, bar chart, pie chart, data table</div>
+      <div class="anno-item-good">Live formulas — update data, charts refresh</div>
+      <div class="anno-item-good">Company branding, colour-coded insights</div>
+      <div class="anno-item-good">Clients say: "This looks like real software!"</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer-note">
+  NexusPro Premium Suite &nbsp;·&nbsp; <span>Excel Template Portfolio</span> &nbsp;·&nbsp; All data is sample / for illustration
+</div>
+
+<script>
+  // Premium bars
+  const rev = [185,195,210,225,240,255,270,265,280,290,295,337];
+  const mx = Math.max(...rev);
+  const bc = document.getElementById('premBars');
+  rev.forEach((v,i) => {
+    const b = document.createElement('div');
+    b.className = 'pbar';
+    b.style.height = `${(v/mx)*66}px`;
+    b.style.background = i >= 9 ? '#ffd700' : (i >= 6 ? '#0f3460' : '#162040');
+    bc.appendChild(b);
+  });
+
+  // Pie
+  const p = document.getElementById('premPie');
+  const sl = [{pct:.21,c:'#ffd700'},{pct:.25,c:'#00d4ff'},{pct:.28,c:'#00e676'},{pct:.32,c:'#7c4dff'}];
+  let ang = -Math.PI/2;
+  sl.forEach(s => {
+    const a = s.pct*2*Math.PI, r=15, cx=18, cy=18;
+    const x1=cx+r*Math.cos(ang), y1=cy+r*Math.sin(ang);
+    const x2=cx+r*Math.cos(ang+a), y2=cy+r*Math.sin(ang+a);
+    const el = document.createElementNS('http://www.w3.org/2000/svg','path');
+    el.setAttribute('d',`M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${a>Math.PI?1:0},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`);
+    el.setAttribute('fill', s.c);
+    el.setAttribute('stroke','#0d0d1a');
+    el.setAttribute('stroke-width','0.5');
+    p.appendChild(el);
+    ang += a;
+  });
+</script>
+</body>
+</html>
