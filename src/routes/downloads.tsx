@@ -46,8 +46,12 @@ function DownloadsPage() {
       <img src={aiRobot} alt="" loading="lazy" className="absolute left-0 bottom-10 w-80 opacity-30 animate-float pointer-events-none" />
 
       <div className="container relative z-10">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-10">
-          <ArrowLeft className="w-4 h-4" /> Back to home
+        <Link
+          to="/"
+          className="group inline-flex items-center gap-2 mb-10 px-5 py-2.5 rounded-full glass border border-primary/20 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 hover:shadow-glow transition-all duration-300"
+        >
+          <ArrowLeft className="w-4 h-4 text-primary group-hover:-translate-x-1 transition-transform" />
+          Back to <span className="text-gradient font-semibold">Nexora Digital</span>
         </Link>
 
         <div className="text-center mb-16 max-w-2xl mx-auto">
