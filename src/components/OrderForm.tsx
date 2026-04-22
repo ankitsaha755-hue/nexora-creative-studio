@@ -10,6 +10,9 @@ const serviceOptions = [
   "Branding/Lead Generation",
   "Data Management and Analytics",
   "App Development",
+  "Logo Generation",
+  "Automation",
+  "Template Making (With PDF downloader)",
 ];
 
 const OrderForm = () => {
