@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as GalaxyRouteImport } from './routes/galaxy'
+import { Route as DownloadsRouteImport } from './routes/downloads'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -19,6 +20,11 @@ import { Route as RomeTourRouteImport } from './routes/rome.tour'
 const GalaxyRoute = GalaxyRouteImport.update({
   id: '/galaxy',
   path: '/galaxy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DownloadsRoute = DownloadsRouteImport.update({
+  id: '/downloads',
+  path: '/downloads',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/downloads': typeof DownloadsRoute
   '/galaxy': typeof GalaxyRoute
   '/rome/tour': typeof RomeTourRoute
   '/rome/': typeof RomeIndexRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/downloads': typeof DownloadsRoute
   '/galaxy': typeof GalaxyRoute
   '/rome/tour': typeof RomeTourRoute
   '/rome': typeof RomeIndexRoute
@@ -68,20 +76,36 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/downloads': typeof DownloadsRoute
   '/galaxy': typeof GalaxyRoute
   '/rome/tour': typeof RomeTourRoute
   '/rome/': typeof RomeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/auth' | '/galaxy' | '/rome/tour' | '/rome/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/downloads'
+    | '/galaxy'
+    | '/rome/tour'
+    | '/rome/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/auth' | '/galaxy' | '/rome/tour' | '/rome'
+  to:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/downloads'
+    | '/galaxy'
+    | '/rome/tour'
+    | '/rome'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/auth'
+    | '/downloads'
     | '/galaxy'
     | '/rome/tour'
     | '/rome/'
@@ -91,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  DownloadsRoute: typeof DownloadsRoute
   GalaxyRoute: typeof GalaxyRoute
   RomeTourRoute: typeof RomeTourRoute
   RomeIndexRoute: typeof RomeIndexRoute
@@ -103,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/galaxy'
       fullPath: '/galaxy'
       preLoaderRoute: typeof GalaxyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/downloads': {
+      id: '/downloads'
+      path: '/downloads'
+      fullPath: '/downloads'
+      preLoaderRoute: typeof DownloadsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -147,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  DownloadsRoute: DownloadsRoute,
   GalaxyRoute: GalaxyRoute,
   RomeTourRoute: RomeTourRoute,
   RomeIndexRoute: RomeIndexRoute,
