@@ -5,11 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 const serviceOptions = [
   "Website Development",
-  "App Development",
+  "Web Application Development",
   "PowerPoint Presentation",
-  "Lead Generation",
-  "Data Management",
-  "Data Analytics",
+  "Branding/Lead Generation",
+  "Data Management and Analytics",
+  "App Development",
 ];
 
 const OrderForm = () => {
