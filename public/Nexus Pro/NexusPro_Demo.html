@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NexusPro — 15s Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+  }
+
+  .screen-wrapper {
+    position: relative;
+    width: min(900px, 100vw);
+    aspect-ratio: 16/9;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 100px rgba(255,215,0,0.15), 0 40px 80px rgba(0,0,0,0.8);
+  }
+
+  #demoCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .ctrl-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .ctrl-btn:hover { background: rgba(255,215,0,0.1); border-color: rgba(255,215,0,0.4); }
+  .ctrl-btn.primary { background: #ffd700; color: #000; border-color: #ffd700; }
+  .ctrl-btn.primary:hover { background: #ffe040; }
+
+  .progress-bar {
+    width: min(900px, 100vw);
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, #ffd700, #00e676);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+    width: 0%;
+  }
+
+  .time-label { font-size: 12px; color: #555; }
+</style>
+</head>
+<body>
+
+<div class="screen-wrapper">
+  <canvas id="demoCanvas"></canvas>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="controls">
+  <button class="ctrl-btn primary" id="playBtn" onclick="restart()">▶ Replay Demo</button>
+  <span class="time-label" id="timeLabel">0.0s / 18s</span>
+</div>
+
+<script>
+const canvas = document.getElementById('demoCanvas');
+const ctx = canvas.getContext('2d');
+const W = 900, H = 506;
+canvas.width = W; canvas.height = H;
+
+// ─── COLORS ────────────────────────────────────────────────────────────────
+const C = {
+  bg:     '#0D0D0D', bgCard: '#1A1A2E', bgHdr: '#16213E',
+  gold:   '#FFD700', cyan:  '#00D4FF', green: '#00E676',
+  red:    '#FF4444', purp:  '#7C4DFF', white: '#FFFFFF',
+  gray:   '#AAAAAA', border:'#2A2A4A',
+};
+
+// ─── STATE ─────────────────────────────────────────────────────────────────
+let t = 0;          // elapsed seconds
+let last = null;
+let raf;
+const DURATION = 18;
+
+const revenue = [185,195,210,225,240,255,270,265,280,290,295,337];
+const months  = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+
+// ─── UTILS ─────────────────────────────────────────────────────────────────
+function lerp(a, b, p) { return a + (b-a)*Math.min(1,Math.max(0,p)); }
+function easeOut(x) { return 1 - Math.pow(1-x, 3); }
+function fadeIn(val, start, end) {
+  if (t < start) return 0;
+  return easeOut(Math.min(1, (t-start)/(end-start)));
+}
+
+function roundRect(x, y, w, h, r, fill) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+}
+
+function txt(text, x, y, size, color, align='left', bold=false, font='DM Sans') {
+  ctx.font = `${bold?'700':'400'} ${size}px '${font}', sans-serif`;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.fillText(text, x, y);
+}
+
+// ─── SCENES ─────────────────────────────────────────────────────────────────
+// Scene 1: 0-3s  — fade in title screen
+// Scene 2: 3-7s  — dashboard builds in (KPI cards + header)
+// Scene 3: 7-12s — bar chart animates in
+// Scene 4: 12-15s— table rows appear
+// Scene 5: 15-18s— invoice sheet reveal
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // ── Scene 1: Intro title (0 – 3s) ─────────────────────────────────────────
+  if (t < 4) {
+    const p = fadeIn(t, 0, 1.2);
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Glow
+    const grd = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, 320);
+    grd.addColorStop(0, `rgba(255,215,0,${0.12 * p})`);
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.globalAlpha = p;
+    txt('⚡', W/2, H/2 - 50, 52, C.gold, 'center', true, 'Syne');
+    txt('NexusPro Premium Suite', W/2, H/2 + 10, 32, C.white, 'center', true, 'Syne');
+    txt('Excel Dashboards That Look Like SaaS', W/2, H/2 + 48, 14, C.gray, 'center', false, 'DM Sans');
+    ctx.globalAlpha = 1;
+
+    // Fade out at 3s
+    if (t > 3) {
+      const out = Math.min(1, (t-3)/0.5);
+      ctx.fillStyle = `rgba(13,13,13,${out})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+
+  // ── Scene 2-4: Sales Dashboard (3 – 15s) ───────────────────────────────────
+  if (t >= 2.5 && t < 16.5) {
+    const fadeInDash = easeOut(Math.min(1, (t - 2.8) / 0.8));
+    ctx.globalAlpha = fadeInDash;
+
+    // Full background
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Header bar
+    roundRect(0, 0, W, 52, 0, C.bgHdr);
+    txt('⚡  NEXUS PRO — SALES DASHBOARD', 22, 32, 15, C.gold, 'left', true, 'Syne');
+    txt('FY 2024  |  Live Analytics', W - 20, 32, 11, C.gray, 'right');
+
+    // ── KPI Cards ──────────────────────────────────────────────────────────
+    const kpis = [
+      { label: '💰 REVENUE',  val: '$2.85M', chg: '▲ 18.4%', color: C.gold  },
+      { label: '📈 PROFIT',   val: '$641K',  chg: '▲ 12.1%', color: C.green },
+      { label: '👥 CLIENTS',  val: '847',    chg: '▲ 9.3%',  color: C.cyan  },
+      { label: '📦 UNITS',    val: '14.2K',  chg: '▲ 22.7%', color: C.purp  },
+    ];
+    const kpiW = (W - 50) / 4, kpiH = 86;
+    kpis.forEach((k, i) => {
+      const delay = 3.2 + i * 0.15;
+      const p2 = easeOut(Math.min(1, Math.max(0, (t - delay) / 0.4)));
+      const yOff = lerp(20, 0, p2);
+      ctx.globalAlpha = fadeInDash * p2;
+      const x = 20 + i*(kpiW + 10/3);
+      const y = 62 + yOff;
+      roundRect(x, y, kpiW, kpiH, 8, C.bgCard);
+      // accent line
+      ctx.fillStyle = k.color;
+      roundRect(x, y, kpiW, 3, [3,3,0,0], k.color);
+      ctx.globalAlpha = fadeInDash * p2;
+      txt(k.label, x + kpiW/2, y + 22, 9, k.color, 'center', true);
+      txt(k.val, x + kpiW/2, y + 58, 22, C.white, 'center', true, 'Syne');
+      txt(k.chg, x + kpiW/2, y + 76, 10, C.green, 'center', true);
+    });
+
+    // ── Bar Chart (animates 7-12s) ────────────────────────────────────────
+    ctx.globalAlpha = fadeInDash;
+    const chartX = 20, chartY = 162, chartW = 520, chartH = 160;
+    roundRect(chartX, chartY, chartW, chartH, 8, C.bgCard);
+
+    txt('MONTHLY REVENUE', chartX + 16, chartY + 20, 9, C.gray, 'left', true);
+    txt('FY 2024', chartX + chartW - 16, chartY + 20, 9, C.gray, 'right');
+
+    const barProgress = easeOut(Math.min(1, Math.max(0, (t - 7) / 2)));
+    const maxRev = Math.max(...revenue);
+    const bw = (chartW - 60) / 12;
+    const bh_area = chartH - 50;
+
+    revenue.forEach((r, i) => {
+      const bh = ((r/maxRev) * bh_area) * barProgress;
+      const bx = chartX + 30 + i*(bw + 4);
+      const by = chartY + chartH - 26 - bh;
+      const isHighlight = i >= 9;
+      ctx.fillStyle = isHighlight
+        ? `rgba(255,215,0,${barProgress})`
+        : `rgba(30,70,130,${barProgress})`;
+      roundRect(bx, by, bw, bh, [3,3,0,0]);
+      ctx.fill();
+      txt(months[i], bx + bw/2, chartY + chartH - 10, 8, C.gray, 'center');
+    });
+
+    // ── Pie chart ─────────────────────────────────────────────────────────
+    const pieProgress = easeOut(Math.min(1, Math.max(0, (t - 7.5) / 2)));
+    const pieX = 570, pieY = 162, pieW = W - 590, pieH = 160;
+    roundRect(pieX, pieY, pieW, pieH, 8, C.bgCard);
+    txt('REVENUE BY QUARTER', pieX + pieW/2, pieY + 20, 9, C.gray, 'center', true);
+
+    const cx2 = pieX + pieW/2, cy2 = pieY + 90, pr = 50;
+    const sl = [{p:.21,c:C.gold},{p:.25,c:C.cyan},{p:.28,c:C.green},{p:.32,c:C.purp}];
+    let ang = -Math.PI/2;
+    sl.forEach(s => {
+      const a = s.p * 2 * Math.PI * pieProgress;
+      ctx.beginPath();
+      ctx.moveTo(cx2, cy2);
+      ctx.arc(cx2, cy2, pr, ang, ang + a);
+      ctx.closePath();
+      ctx.fillStyle = s.c;
+      ctx.fill();
+      ang += s.p * 2 * Math.PI;
+    });
+    // donut hole
+    ctx.beginPath();
+    ctx.arc(cx2, cy2, pr * 0.55, 0, Math.PI*2);
+    ctx.fillStyle = C.bgCard;
+    ctx.fill();
+
+    // ── Table (12-15s) ──────────────────────────────────────────────────
+    const tableP = easeOut(Math.min(1, Math.max(0, (t - 11) / 1.5)));
+    const tY = 334, tH = 148;
+    ctx.globalAlpha = fadeInDash * tableP;
+    roundRect(20, tY, W-40, tH, 8, C.bgCard);
+
+    // Table header
+    roundRect(20, tY, W-40, 24, [8,8,0,0], C.bgHdr);
+    const cols = ['MONTH','REVENUE','UNITS SOLD','PROFIT','CONV %'];
+    const cw = (W-60)/5;
+    cols.forEach((c, i) => txt(c, 40 + i*cw + cw/2, tY+16, 9, C.gold, 'center', true));
+
+    const tdata = [
+      ['October',  '$290,000','1,440','$65,000','38.0%'],
+      ['November', '$295,000','1,470','$66,000','39.0%'],
+      ['December', '$337,500','1,840','$88,200','41.0%'],
+      ['Q4 Total', '$922,500','4,750','$219,200','39.3%'],
+    ];
+    tdata.forEach((row, ri) => {
+      const ry = tY + 24 + ri * 30;
+      const rowFade = easeOut(Math.min(1, Math.max(0, (t - 11 - ri * 0.2) / 0.6)));
+      ctx.globalAlpha = fadeInDash * tableP * rowFade;
+      if (ri % 2 === 0) {
+        roundRect(20, ry, W-40, 30, 0, 'rgba(15,52,96,0.3)');
+      }
+      row.forEach((cell, ci) => {
+        const isGreen = ci >= 3;
+        const isGold  = ci === 0;
+        txt(cell, 40 + ci*cw + cw/2, ry + 19, 10,
+            isGreen ? C.green : isGold ? C.gold : C.white, 'center',
+            ri === 3);
+      });
+    });
+
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Scene 5: Invoice reveal (15 – 18s) ─────────────────────────────────────
+  if (t >= 14.5) {
+    const p = easeOut(Math.min(1, (t - 14.5) / 1));
+    ctx.globalAlpha = p;
+
+    // Slide in from right
+    const slideX = lerp(W, 0, easeOut(Math.min(1, (t-14.5)/0.7)));
+
+    ctx.save();
+    ctx.translate(slideX, 0);
+    ctx.fillStyle = '#F8F9FF';
+    ctx.fillRect(0, 0, W, H);
+
+    // Invoice header band
+    ctx.fillStyle = C.bgHdr;
+    ctx.fillRect(0, 0, W, 90);
+
+    txt('NEXUS SOLUTIONS LTD.', 28, 44, 22, C.gold, 'left', true, 'Syne');
+    txt('123 Business Ave, New York, NY 10001', 28, 64, 10, C.gray, 'left');
+    txt('INVOICE', W - 28, 52, 30, C.cyan, 'right', true, 'Syne');
+    txt('INV-2024-001  |  Due: Feb 15', W-28, 72, 10, C.gray, 'right');
+
+    // Bill-to area
+    roundRect(24, 104, 240, 80, 8, '#EEF0FF');
+    txt('BILL TO', 44, 124, 9, '#888', 'left', true);
+    txt('Acme Corp', 44, 146, 14, '#1A1A2E', 'left', true, 'Syne');
+    txt('acme@acme.com', 44, 164, 10, '#555', 'left');
+
+    roundRect(W - 264, 104, 240, 80, 8, '#EEF0FF');
+    txt('STATUS', W - 44, 124, 9, '#888', 'right', true);
+    txt('UNPAID', W - 44, 146, 14, C.red, 'right', true, 'Syne');
+    txt('Bank Transfer', W - 44, 164, 10, '#555', 'right');
+
+    // Table
+    const it = 200;
+    ctx.fillStyle = C.bgHdr;
+    roundRect(24, it, W-48, 28, [8,8,0,0], C.bgHdr);
+    const iCols = ['DESCRIPTION','QTY','UNIT PRICE','DISCOUNT','TOTAL'];
+    const icw = (W-96) / 5;
+    iCols.forEach((c,i) => txt(c, 60 + i*icw, it+18, 9, C.gold, 'left', true));
+
+    const items = [
+      ['Web Design & Dev','1','$4,500','0%','$5,310'],
+      ['SEO Management','3','$1,200','10%','$3,812'],
+      ['Logo & Brand Identity','1','$2,800','0%','$3,304'],
+      ['Social Media Mgmt','6','$800','5%','$4,750'],
+      ['Business Consulting','5','$350','0%','$2,066'],
+    ];
+    items.forEach((item, ri) => {
+      const ry = it + 28 + ri * 30;
+      const rowFade = easeOut(Math.min(1, Math.max(0, (t - 15.2 - ri*0.15) / 0.4)));
+      ctx.globalAlpha = p * rowFade;
+      if (ri%2===0) { ctx.fillStyle='#F0F2FF'; ctx.fillRect(24, ry, W-48, 30); }
+      item.forEach((cell, ci) => {
+        const isBold = ci === 4;
+        txt(cell, 60 + ci*icw, ry + 19, 10,
+            ci === 4 ? '#1A1A2E' : '#333',
+            'left', isBold);
+      });
+    });
+    ctx.globalAlpha = p;
+
+    // Grand total
+    const gt = it + 28 + items.length*30 + 8;
+    ctx.fillStyle = C.bgHdr;
+    roundRect(W - 260, gt, 236, 40, 8, C.bgHdr);
+    txt('GRAND TOTAL', W-44, gt + 26, 13, '#fff', 'right', true, 'Syne');
+    txt('$19,242.00', W - 240, gt + 26, 14, C.gold, 'left', true, 'Syne');
+
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Scene 6: End card (17.5+) ───────────────────────────────────────────────
+  if (t >= 17) {
+    const p = easeOut(Math.min(1, (t - 17) / 0.7));
+    ctx.fillStyle = `rgba(13,13,26,${p * 0.9})`;
+    ctx.fillRect(0, 0, W, H);
+
+    const fp = easeOut(Math.min(1, Math.max(0, (t - 17.2) / 0.5)));
+    ctx.globalAlpha = fp;
+    txt('⚡ NexusPro Premium Suite', W/2, H/2 - 24, 24, C.gold, 'center', true, 'Syne');
+    txt('Sales Dashboard  ·  Marketing  ·  Business Overview  ·  Invoice System', W/2, H/2 + 14, 12, C.gray, 'center');
+    txt('One Excel file — complete business toolkit', W/2, H/2 + 38, 11, C.cyan, 'center');
+    ctx.globalAlpha = 1;
+  }
+}
+
+function tick(ts) {
+  if (!last) last = ts;
+  const dt = (ts - last) / 1000;
+  last = ts;
+  t = Math.min(t + dt, DURATION);
+
+  draw();
+
+  const pct = (t / DURATION) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('timeLabel').textContent = `${t.toFixed(1)}s / ${DURATION}s`;
+
+  if (t < DURATION) {
+    raf = requestAnimationFrame(tick);
+  }
+}
+
+function restart() {
+  cancelAnimationFrame(raf);
+  t = 0; last = null;
+  raf = requestAnimationFrame(tick);
+}
+
+// Auto-start
+raf = requestAnimationFrame(tick);
+</script>
+</body>
+</html>
