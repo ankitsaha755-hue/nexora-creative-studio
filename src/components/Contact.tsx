@@ -122,7 +122,7 @@ const Contact = () => {
                 </Popover>
                 {[
                   { Icon: Facebook, href: "https://www.facebook.com/share/14aphi7LT2j/", label: "Facebook" },
-                  { Icon: Instagram, href: "https://www.instagram.com/nexorra.digital/?hl=en", label: "Instagram" },
+                  { Icon: Instagram, href: "https://www.instagram.com/nexorra__digital/?hl=en", label: "Instagram" },
                 ].map(({ Icon, href, label }) => (
                   <a
                     key={label}
