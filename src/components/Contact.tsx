@@ -178,9 +178,6 @@ const Contact = () => {
         </div>
       </div>
 
-      <footer className="container mt-24 pt-8 border-t border-border/50 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Nexora Digital. Crafted with precision.
-      </footer>
     </section>
   );
 };
