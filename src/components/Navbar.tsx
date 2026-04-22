@@ -89,7 +89,7 @@ const Navbar = () => {
             ))}
             <li>
               <Link
-                to="/auth"
+                to="/admin"
                 onClick={() => setOpen(false)}
                 className="inline-flex items-center gap-1.5 text-primary font-semibold"
               >
