@@ -56,15 +56,12 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-3">
           <Link
-            to="/auth"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            to="/admin"
+            className="btn-hero !py-2.5 !px-6 text-sm inline-flex items-center gap-1.5"
           >
             <Lock className="w-3.5 h-3.5" />
             Admin
           </Link>
-          <a href="#order" className="btn-hero !py-2.5 !px-6 text-sm">
-            Get Started
-          </a>
         </div>
 
         <button
