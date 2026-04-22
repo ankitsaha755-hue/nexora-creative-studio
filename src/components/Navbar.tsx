@@ -10,6 +10,7 @@ const links = [
   { href: "#order", label: "Order" },
   { href: "#payment", label: "Payment" },
   { href: "#contact", label: "Contact" },
+  { href: "#about", label: "About" },
 ];
 
 const Navbar = () => {
